@@ -1,0 +1,20 @@
+# macOS 系统文件
+.DS_Store
+
+# Python 虚拟环境（开发依赖，非平台交付物）
+.venv/
+
+# Agent 工作区（含隐私记忆 / 自动化配置，不入库）
+.workbuddy/
+
+# 不相关的历史打包
+安规系统-ai版本.zip
+
+# 开发期诊断 / 测试脚本（非平台交付物）
+*.mjs
+diag_*.js
+test_*.js
+probe_*.js
+
+# 本地依赖
+node_modules/
