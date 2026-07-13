@@ -11,6 +11,8 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/svg2pdf.umd.min.js"></script>
   <script src="vendor/html2canvas.min.js"></script>
+  <!-- opentype.js：把含中文的文字转矢量轮廓，确保 PDF 在 Illustrator 中可编辑且中文正确显示 -->
+  <script src="vendor/opentype.min.js"></script>
   <!-- Tesseract.js 纯前端 OCR 引擎：用于识别扫描件/图片型 PDF 的文字，无需 API Key -->
   <script src="https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
   <style>
@@ -5736,31 +5738,89 @@ function wrapRotate(inner, el) {
   return `<g transform="rotate(${el.rotation} ${cx} ${cy})">${inner}</g>`;
 }
 
-// 文字 → 可编辑 <text>（逐行 tspan）
-function elToTextSvg(el) {
+// ---- 中文字体（懒加载，导出时按需注入，避免页面打开即加载 16MB）----
+// 含中文的文字必须转矢量轮廓：svg2pdf 不支持 Type0/CID 中文字体，标准字体无法编码中文，
+// 因此用 opentype.js 把字形转成 <path>，Illustrator 中即可作为可编辑矢量路径。
+const _cjkFontCache = {};
+function loadScriptOnce(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = () => res(); s.onerror = () => rej(new Error('字体脚本加载失败: ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function getCjkFont(weight) {
+  const key = weight === 'bold' ? 'bold' : 'regular';
+  if (_cjkFontCache[key]) return _cjkFontCache[key];
+  try {
+    const src = key === 'bold' ? 'vendor/noto-sans-sc-bold.font.js' : 'vendor/noto-sans-sc.font.js';
+    await loadScriptOnce(src);
+    const b64 = key === 'bold' ? window.__FONT_BOLD_B64 : window.__FONT_REGULAR_B64;
+    if (!b64 || !window.opentype) return null;
+    const bin = atob(b64), len = bin.length, bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+    const font = window.opentype.parse(bytes.buffer);
+    _cjkFontCache[key] = font;
+    return font;
+  } catch (e) { console.warn('CJK 字体加载失败', e); return null; }
+}
+function hasCJK(t) { return /[㐀-鿿　-〿＀-￯\u3400-\u4dbf]/.test(t); }
+
+// 文字 → 可编辑对象：纯拉丁保留 <text>（AI 可改字）；含中文转矢量轮廓 <path>（AI 可编辑路径）
+async function elToTextSvg(el) {
   const s = el.style || {};
   const fs = num(s.fontSize, 14);
   const fill = parseColor(s.color) || '#333333';
-  const fw = (s.fontWeight === 'bold' || s.fontWeight === '700') ? 'bold' : (s.fontWeight || 'normal');
-  const ff = (s.fontFamily && s.fontFamily !== 'inherit') ? s.fontFamily : 'sans-serif';
+  const bold = (s.fontWeight === 'bold' || s.fontWeight === '700');
+  const weight = bold ? 'bold' : 'normal';
   const align = s.textAlign || 'left';
-  const pad = num(s.padding, 0);
-  let anchor, tx;
-  if (align === 'center') { anchor = 'middle'; tx = el.x + el.width / 2; }
-  else if (align === 'right') { anchor = 'end'; tx = el.x + el.width; }
-  else { anchor = 'start'; tx = el.x + pad; }
   const lh = num(s.lineHeight, 1.2);
-  const lines = String(el.content == null ? '' : el.content).split('\n');
-  let tspans = '';
-  lines.forEach((ln, i) => {
-    const txt = xmlEscape(ln.length ? ln : ' ');
-    if (i === 0) tspans += `<tspan x="${tx.toFixed(1)}" y="${(el.y + fs).toFixed(1)}">${txt}</tspan>`;
-    else tspans += `<tspan x="${tx.toFixed(1)}" dy="${(fs * lh).toFixed(1)}">${txt}</tspan>`;
-  });
-  let t = `<text font-family="${xmlEscape(ff)}" font-size="${fs}" font-weight="${fw}" `
-    + `font-style="${(s.fontStyle === 'italic') ? 'italic' : 'normal'}" fill="${fill}" text-anchor="${anchor}">${tspans}</text>`;
-  if (el.rotation) t = wrapRotate(t, el);
-  return t;
+  const pad = num(s.padding, 0);
+  const text = String(el.content == null ? '' : el.content);
+  const lines = text.split('\n');
+
+  // 纯拉丁：保留为可编辑 <text>（svg2pdf 用标准字体，Illustrator 中可改字）
+  if (!hasCJK(text)) {
+    let anchor, tx;
+    if (align === 'center') { anchor = 'middle'; tx = el.x + el.width / 2; }
+    else if (align === 'right') { anchor = 'end'; tx = el.x + el.width; }
+    else { anchor = 'start'; tx = el.x + pad; }
+    let tspans = '';
+    lines.forEach((ln, i) => {
+      const txt = xmlEscape(ln.length ? ln : ' ');
+      if (i === 0) tspans += `<tspan x="${tx.toFixed(1)}" y="${(el.y + fs).toFixed(1)}">${txt}</tspan>`;
+      else tspans += `<tspan x="${tx.toFixed(1)}" dy="${(fs * lh).toFixed(1)}">${txt}</tspan>`;
+    });
+    let t = `<text font-family="sans-serif" font-size="${fs}" font-weight="${weight}" `
+      + `font-style="${(s.fontStyle === 'italic') ? 'italic' : 'normal'}" fill="${fill}" text-anchor="${anchor}">${tspans}</text>`;
+    if (el.rotation) t = wrapRotate(t, el);
+    return t;
+  }
+
+  // 含中文：转矢量轮廓（保证中文正确显示，且 Illustrator 中作为可编辑矢量路径）
+  const font = await getCjkFont(weight);
+  if (!font) {
+    let t = `<text font-family="sans-serif" font-size="${fs}" font-weight="${weight}" fill="${fill}">${xmlEscape(text)}</text>`;
+    if (el.rotation) t = wrapRotate(t, el);
+    return t;
+  }
+  let paths = '';
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    if (!ln) continue;
+    const baselineY = el.y + fs + i * fs * lh;
+    let x = el.x + pad;
+    const w = font.getAdvanceWidth(ln, fs) || 0;
+    if (align === 'center') x = el.x + el.width / 2 - w / 2;
+    else if (align === 'right') x = el.x + el.width - w;
+    const op = font.getPath(ln, x, baselineY, fs);
+    const d = op.toPathData(2);
+    if (d) paths += `<path d="${d}" fill="${fill}"/>`;
+  }
+  let g = paths ? `<g>${paths}</g>` : '';
+  if (g && el.rotation) g = wrapRotate(g, el);
+  return g;
 }
 
 // 矩形 / 圆角矩形
@@ -5863,7 +5923,7 @@ async function buildPageSVG(page, scale, watermark) {
   for (const el of (page.elements || [])) {
     if (el.visible === false) continue;
     const t = el.type;
-    if (TEXT_TYPES.has(t)) body += elToTextSvg(el);
+    if (TEXT_TYPES.has(t)) body += await elToTextSvg(el);
     else if (t === 'shape' || t === 'shape-rounded') body += elToRectSvg(el);
     else if (t === 'shape-circle') body += elToCircleSvg(el);
     else if (t === 'divider' || t === 'line') body += elToLineSvg(el);
