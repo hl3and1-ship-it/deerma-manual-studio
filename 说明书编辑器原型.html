@@ -1263,7 +1263,7 @@
     .preview-body { flex:1; overflow:auto; display:flex; padding:30px; }
     /* 缩放容器：用显式尺寸撑开滚动区，margin:auto 居中且允许溢出滚动（避免 justify-content:center 裁掉顶部/左侧） */
     .preview-scaler { margin:auto; position:relative; }
-    .preview-page { background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); position:absolute; top:0; left:0; transform-origin:0 0; }
+    .preview-page { background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); position:absolute; top:0; left:0; transform-origin:0 0; overflow:hidden; }
 
     /* Collaborator cursors (simulation) */
     .collab-cursor {
@@ -8805,14 +8805,18 @@ function renderPreview() {
   if (!page) return;
   body.innerHTML = '';
 
+  // 使用实际页面尺寸（支持双开折页等非标准尺寸），而非全局 PAGE_W 常量
+  const pW = page.w || PAGE_W;
+  const pH = page.h || PAGE_H;
+
   const scaler = document.createElement('div');
   scaler.className = 'preview-scaler';
   scaler.id = 'previewScaler';
 
   const previewPage = document.createElement('div');
   previewPage.className = 'preview-page';
-  previewPage.style.width = PAGE_W + 'px';
-  previewPage.style.height = PAGE_H + 'px';
+  previewPage.style.width = pW + 'px';
+  previewPage.style.height = pH + 'px';
 
   page.elements.forEach(el => {
     if (el.visible === false) return;
@@ -8855,10 +8859,14 @@ function changePreviewPage(dir) {
 function applyPreviewZoom() {
   const scaler = document.getElementById('previewScaler');
   if (scaler) {
-    scaler.style.width = (PAGE_W * state.previewZoom) + 'px';
-    scaler.style.height = (PAGE_H * state.previewZoom) + 'px';
-    const page = scaler.querySelector('.preview-page');
-    if (page) page.style.transform = `scale(${state.previewZoom})`;
+    // 使用当前预览页的实际尺寸（支持双开折页等非标准尺寸）
+    const page = state.pages[state.previewPageIdx];
+    const pW = (page && page.w) || PAGE_W;
+    const pH = (page && page.h) || PAGE_H;
+    scaler.style.width = (pW * state.previewZoom) + 'px';
+    scaler.style.height = (pH * state.previewZoom) + 'px';
+    const pp = scaler.querySelector('.preview-page');
+    if (pp) pp.style.transform = `scale(${state.previewZoom})`;
   }
   const disp = document.getElementById('previewZoomDisplay');
   if (disp) disp.textContent = Math.round(state.previewZoom * 100) + '%';
@@ -8877,9 +8885,12 @@ function setPreviewZoom(scale) {
 function fitPreview() {
   const body = document.getElementById('previewBody');
   if (!body) return;
+  const page = state.pages[state.previewPageIdx];
+  const pW = (page && page.w) || PAGE_W;
+  const pH = (page && page.h) || PAGE_H;
   const ww = body.clientWidth - 60;
   const wh = body.clientHeight - 60;
-  const scale = Math.min(ww / PAGE_W, wh / PAGE_H, 1);
+  const scale = Math.min(ww / pW, wh / pH, 1);
   state.previewZoom = Math.max(0.1, Math.min(5, scale));
   applyPreviewZoom();
 }
@@ -8900,8 +8911,12 @@ function onPreviewWheel(e) {
   const localY = (e.clientY - rect.top) / curr;
 
   state.previewZoom = newZoom;
-  scaler.style.width = (PAGE_W * newZoom) + 'px';
-  scaler.style.height = (PAGE_H * newZoom) + 'px';
+  // 使用实际页面尺寸（支持非标准尺寸如双开折页）
+  const zp = state.pages[state.previewPageIdx];
+  const zw = (zp && zp.w) || PAGE_W;
+  const zh = (zp && zp.h) || PAGE_H;
+  scaler.style.width = (zw * newZoom) + 'px';
+  scaler.style.height = (zh * newZoom) + 'px';
   const page = scaler.querySelector('.preview-page');
   if (page) page.style.transform = `scale(${newZoom})`;
 
