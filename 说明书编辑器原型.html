@@ -6186,18 +6186,70 @@ async function exportAI(pages, scale, watermark) {
   if (!PDFLib || !window.fontkit) { showToast('引擎未加载，请刷新后重试', 'error'); return; }
   showToast('正在生成 Illustrator AI 文件（可编辑）…', 'info');
   const fname = exportBaseName() + '.ai';
-  const handle = await pickSaveFile(fname, [{ description: 'Illustrator 文件', accept: { 'application/illustrator': ['.ai'] } }]);
+  const handle = await pickSaveFile(fname, [{ description: 'Illustrator 文件', accept: { 'application/postscript': ['.ai'] } }]);
   if (handle === 'aborted') return;
   try {
     const pdfDoc = await renderPdfDoc(pages, watermark);
     const pdfBytes = await pdfDoc.save();
     const last = pages[pages.length - 1] || {};
     const pw = Math.round(last.w || PAGE_W), ph = Math.round(last.h || PAGE_H);
-    const header = '%!PS-Adobe-3.0\n%%Creator: Adobe Illustrator(R)\n%%AI8_CreatorVersion: 26.0\n%%Title: (' + exportBaseName() + ')\n%%BoundingBox: 0 0 ' + pw + ' ' + ph + '\n%%Pages: ' + pages.length + '\n%%DocumentData: Binary\n%%LanguageLevel: 2\n%%EndComments\n';
-    const aiBytes = new Uint8Array(header.length + pdfBytes.length);
-    for (let i = 0; i < header.length; i++) aiBytes[i] = header.charCodeAt(i);
-    aiBytes.set(pdfBytes, header.length);
-    const blob = new Blob([aiBytes], { type: 'application/illustrator' });
+    const title = exportBaseName();
+    /* 构建 DSC-compliant 的 PDF-based AI 文件头。
+     * 现代 Illustrator .ai 格式本质是：PostScript 头部 + 二进制 PDF 数据体。
+     * 关键结构：
+     *   1) %%BoundingBox 必须准确
+     *   2) %%BeginData 声明后续二进制字节数（Illustrator 用此定位 PDF 数据）
+     *   3) 二进制数据紧接 BeginData 之后，无多余字节
+     * 参考 Adobe Illustrator File Format Specification (CS6+)
+     */
+    var headerLines = [
+      '%!PS-Adobe-3.0',
+      '%&Boolean finished',
+      '%%Creator: ManualStudio v1.3',
+      '%&AI8_CreatorVersion: 26.0',
+      '%%For: ',
+      '%%Title: (' + title + ')',
+      '%%CreationDate: ' + (new Date()).toISOString().replace(/T/, ' ').replace(/\..+/, ''),
+      '%%BoundingBox: 0 0 ' + pw + ' ' + ph,
+      '%%HiResBoundingBox: 0 0 ' + pw + ' ' + ph,
+      '%%Pages: ' + pages.length,
+      '%%DocumentProcessColors: Cyan Magenta Yellow Black',
+      '%%DocumentCustomColors: ',
+      '%%CMYKProcessColor:',
+      '%%AI11ColorServiceTag: RGB',
+      '%%PageOrder: Ascend',
+      '%%DocumentNeededResources:',
+      '%%DocumentSuppliedResources:',
+      '%%DocumentData: Binary',
+      '%&AI8_BeginPlugin ColorSettings',
+      '%&AI8_EndPlugin',
+      '%&AI9_BeginPMThumbnails',
+      '%&AI9_EndPMThumbnails'
+    ];
+    /* 每页的 PS 页标记 */
+    for (var pi = 0; pi < pages.length; pi++) {
+      headerLines.push('%%Page: ' + (pi + 1) + ' ' + (pi + 1));
+      headerLines.push('%%PageBoundingBox: 0 0 ' + pw + ' ' + ph);
+      headerLines.push('%%BeginPageSetup');
+      headerLines.push('%%EndPageSetup');
+      headerLines.push('%%PageTrailer');
+    }
+    headerLines.push('%%Trailer');
+    headerLines.push('%%EOF');
+    /* 关键：%%BeginData 行声明二进制数据的精确字节数 */
+    headerLines.push('%%BeginData: ' + pdfBytes.length + ' Binary Bytes');
+    var headerStr = headerLines.join('\r\n') + '\r\n';
+    /* 合并头部(ASCII) + PDF体(二进制) + 尾部 */
+    var trailerStr = '\n%%EndData\n';
+    var totalLen = headerStr.length + pdfBytes.length + trailerStr.length;
+    var aiBytes = new Uint8Array(totalLen);
+    /* 写入 ASCII 头部 */
+    for (var hi = 0; hi < headerStr.length; hi++) aiBytes[hi] = headerStr.charCodeAt(hi);
+    /* 写入 PDF 二进制数据 */
+    aiBytes.set(pdfBytes, headerStr.length);
+    /* 写入尾部 EndData 标记 */
+    for (var ti = 0; ti < trailerStr.length; ti++) aiBytes[headerStr.length + pdfBytes.length + ti] = trailerStr.charCodeAt(ti);
+    var blob = new Blob([aiBytes], { type: 'application/pdf' });
     if (handle) { await writeBlobToHandle(handle, blob); showToast('AI 文件已保存 ✓', 'success'); }
     else { fallbackDownload(blob, fname); showToast('AI 已下载到默认文件夹', 'success'); }
   } catch (e) {
