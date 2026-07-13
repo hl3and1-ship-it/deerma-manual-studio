@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DEERMA - 说明书制作系统 v1.3</title>
+  <title>说明书制作平台 v1.3</title>
   <meta name="app-version" content="1.3">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="vendor/pdf.min.js"></script>
@@ -27,10 +27,10 @@
       --text-muted: #999999;
       --border-color: #e0e0e0;
       --border-light: #f0f0f0;
-      --accent: #ffdb00;
-      --accent-hover: #e6c500;
-      --accent-light: rgba(255,219,0,0.1);
-      --accent-border: rgba(255,219,0,0.3);
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-light: rgba(99,102,241,0.08);
+      --accent-border: rgba(99,102,241,0.25);
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
@@ -42,7 +42,7 @@
       --panel-w: 280px;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    i.fas, i.far, i.fab, i.fal { color: #ffdb00; }
+    i.fas, i.far, i.fab, i.fal { color: #6366f1; }
     .toolbar-btn i.fas, .toolbar-btn i.far, .toolbar-btn i.fab, .toolbar-btn i.fal { color: inherit; }
     .sidebar-tab i.fas, .sidebar-tab i.far, .sidebar-tab i.fab, .sidebar-tab i.fal { color: var(--text-secondary); }
     .sidebar-tab.active i.fas, .sidebar-tab.active i.far, .sidebar-tab.active i.fab, .sidebar-tab.active i.fal { color: var(--text-secondary); }
@@ -77,7 +77,8 @@
       z-index: 200;
     }
     .logo { display:flex; align-items:center; gap:8px; white-space:nowrap; padding:0 8px; }
-    .logo img { height:22px; width:auto; display:block; }
+    .logo img { height:26px; width:auto; display:block; border-radius:5px; }
+    .logo-text { font-size:14px; font-weight:700; color:#1a1a1a; letter-spacing:0.3px; }
     .menu-bar { display:flex; gap:0; flex:1; }
     .menu-bar > .menu-item {
       padding: 6px 14px;
@@ -89,7 +90,7 @@
       position: relative;
     }
     .menu-bar > .menu-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .menu-bar > .menu-item.open { background: var(--accent); color: #333; }
+    .menu-bar > .menu-item.open { background: var(--accent); color: #fff; }
 
     /* Dropdown Menu */
     .dropdown {
@@ -122,7 +123,7 @@
     .dropdown-item:hover { background: var(--bg-hover); }
     .dropdown-item.disabled { opacity: 0.4; cursor: not-allowed; }
     .dropdown-item .shortcut { color: var(--text-muted); font-size: 11px; }
-    .dropdown-item i.fa-fw { width:16px; color: #ffdb00; }
+    .dropdown-item i.fa-fw { width:16px; color: #6366f1; }
     .dropdown-divider { height:1px; background:var(--border-color); margin:4px 0; }
 
     /* ===== Entry Screen — 产品目录首页 ===== */
@@ -134,12 +135,14 @@
     .entry-screen.hidden { display: none; }
     .entry-header {
       height: 64px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; background: var(--accent);
+      padding: 0 32px; background: #fff;
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .entry-header .brand { display: flex; align-items: center; gap: 12px; }
-    .entry-header .brand img { height: 24px; width: auto; }
-    .entry-header .brand-text { font-size: 16px; font-weight: 700; color: #333; letter-spacing: 0.3px; }
-    .entry-header .brand-sub { font-size: 11px; color: rgba(0,0,0,0.5); }
+    .entry-header .brand img { height: 28px; width: auto; border-radius:6px; }
+    .entry-header .brand-text { font-size: 16px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.3px; }
+    .entry-header .brand-sub { font-size: 11px; color: #888; }
     .entry-header-right { display: flex; align-items: center; gap: 16px; }
     .entry-header-right .search-box {
       display: flex; align-items: center; background: rgba(255,255,255,0.5); border-radius: 20px;
@@ -161,7 +164,7 @@
       cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
     }
     .entry-tab:hover { color: var(--text-primary); }
-    .entry-tab.active { color: #333; font-weight: 600; border-bottom-color: var(--accent); }
+    .entry-tab.active { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
     .entry-tab .count { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
 
     .entry-content { flex: 1; padding: 24px 32px; display: flex; flex-direction: column; }
@@ -169,7 +172,7 @@
     .catalog-header h2 { font-size: 18px; font-weight: 600; color: var(--text-primary); }
     .catalog-header .sort-group { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--text-secondary); }
     .catalog-header .sort-btn { padding: 5px 12px; border-radius: 6px; cursor: pointer; color: var(--text-muted); border: 1px solid var(--border-color); background: #fff; transition: all 0.15s; }
-    .catalog-header .sort-btn.active { color: #333; border-color: var(--accent); background: var(--accent-light); }
+    .catalog-header .sort-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
     .catalog-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;
     }
@@ -180,7 +183,7 @@
     }
     .catalog-card:hover {
       border-color: var(--accent); transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(255,219,0,0.15);
+      box-shadow: 0 8px 24px rgba(99,102,241,0.15);
     }
     .catalog-card-preview {
       height: 180px; background: #fafafa; display: flex; align-items: center; justify-content: center;
@@ -194,7 +197,7 @@
       position: absolute; top: 10px; left: 10px; padding: 3px 10px; border-radius: 12px;
       font-size: 11px; font-weight: 600; color: #fff;
     }
-    .type-badge.color { background: #ffdb00; color: #333; }
+    .type-badge.color { background: #6366f1; color: #fff; }
     .type-badge.safety { background: #5b8def; }
     .catalog-card-info { padding: 14px 16px; }
     .catalog-card-info h4 { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
@@ -205,12 +208,12 @@
 
     .fab-new {
       position: fixed; bottom: 40px; right: 48px; z-index: 10001;
-      background: var(--accent); color: #333; border: none; border-radius: 28px;
+      background: var(--accent); color: #fff; border: none; border-radius: 28px;
       padding: 14px 28px; font-size: 15px; font-weight: 700; cursor: pointer;
-      box-shadow: 0 6px 24px rgba(255,219,0,0.4);
+      box-shadow: 0 6px 24px rgba(99,102,241,0.35);
       display: flex; align-items: center; gap: 10px; transition: all 0.2s ease;
     }
-    .fab-new:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(255,219,0,0.5); }
+    .fab-new:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(99,102,241,0.35); }
     .fab-new:active { transform: translateY(0); }
     .fab-new i { color: #333; font-size: 18px; }
 
@@ -342,7 +345,7 @@
       cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center;
       text-align: center; background: #fff; position: relative;
     }
-    .type-select-card:hover { border-color: var(--accent); box-shadow: 0 8px 28px rgba(255,219,0,0.1); }
+    .type-select-card:hover { border-color: var(--accent); box-shadow: 0 8px 28px rgba(99,102,241,0.08); }
     .type-select-card.selected { border-color: var(--accent); background: var(--accent-light); }
     .type-select-card .type-icon {
       width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
@@ -362,7 +365,7 @@
     .type-select-card:hover .feature-tag { background: #fff; }
     .btn-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer; }
     .btn-cancel:hover { background: var(--bg-hover); }
-    .btn-confirm { background: var(--accent); color: #333; border: none; cursor: pointer; }
+    .btn-confirm { background: var(--accent); color: #fff; border: none; cursor: pointer; }
     .btn-confirm:hover { background: var(--accent-hover); }
     .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -372,7 +375,7 @@
       background: #fff; transition: all 0.15s;
     }
     .template-sub-card:hover { border-color: var(--accent); }
-    .template-sub-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,219,0,0.3); }
+    .template-sub-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
     .template-sub-preview {
       height: 120px; background: #fafafa; display: flex; align-items: center; justify-content: center;
       border-bottom: 1px solid var(--border-light); position: relative;
@@ -520,9 +523,9 @@
     .np-btn-cancel:hover { background:#f3f4f6; }
     .np-btn-confirm {
       padding:10px 30px; border-radius:10px; font-size:14px; font-weight:600;
-      border:none; background:#7c3aed; color:#fff; cursor:pointer;
+      border:none; background:var(--accent); color:#fff; cursor:pointer;
     }
-    .np-btn-confirm:hover { background:#6d28d9; }
+    .np-btn-confirm:hover { background:var(--accent-hover); }
 
     .catalog-empty {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -546,8 +549,8 @@
     }
     .btn-outline { background: transparent; border:1px solid var(--border-color); color: var(--text-primary); }
     .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-primary { background: #333; color: #fff; }
-    .btn-primary:hover { background: #1a1a1a; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
     .btn-danger { background: var(--danger); color:#fff; }
     .btn-sm { padding: 4px 12px; font-size: 12px; }
 
@@ -595,7 +598,7 @@
     }
     .search-box { display:flex; align-items:center; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; padding:7px 10px; gap:8px; }
     .search-box input { border:none; background:transparent; outline:none; font-size:12px; width:100%; }
-    .search-box i { color: #ffdb00; font-size:12px; }
+    .search-box i { color: #6366f1; font-size:12px; }
 
     .comp-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
     .comp-item {
@@ -739,7 +742,7 @@
       cursor:pointer; transition:all 0.15s; overflow:hidden;
     }
     .page-thumb:hover { border-color:var(--accent-border); box-shadow:0 2px 8px rgba(0,0,0,0.08); }
-    .page-thumb.active { border-color:var(--accent); box-shadow:0 2px 10px rgba(255,219,0,0.2); }
+    .page-thumb.active { border-color:var(--accent); box-shadow:0 2px 10px rgba(99,102,241,0.2); }
     .page-thumb-canvas {
       width:100%; aspect-ratio:210/297; background:#fff; position:relative;
       overflow:hidden; pointer-events:none;
@@ -787,8 +790,8 @@
       font-size:11px; transition:all 0.1s;
     }
     .layer-item:hover { background:var(--bg-hover); }
-    .layer-item.selected { background: var(--accent); color: #333; }
-    .layer-item i { font-size:11px; color: #ffdb00; width:14px; flex-shrink:0; }
+    .layer-item.selected { background: var(--accent); color: #fff; }
+    .layer-item i { font-size:11px; color: #6366f1; width:14px; flex-shrink:0; }
     .layer-item.selected i { color: #333; }
     .layer-item .layer-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .layer-item .layer-actions { display:flex; gap:4px; opacity:0; transition:opacity 0.15s; flex-shrink:0; }
@@ -819,7 +822,7 @@
       display:flex; align-items:center; justify-content:center; color:var(--text-secondary); transition:all 0.1s; font-size:13px;
     }
     .toolbar-btn:hover { background:var(--bg-hover); color:var(--text-primary); }
-    .toolbar-btn.active { background: var(--accent); color: #333; }
+    .toolbar-btn.active { background: var(--accent); color: #fff; }
     .toolbar-btn.active i.fas { color: #333; }
     .toolbar-btn:disabled { opacity:0.3; cursor:not-allowed; }
     .toolbar-btn:disabled:hover { background:transparent; }
@@ -875,6 +878,7 @@
     .floating-toolbar .toolbar-btn { width:28px; height:28px; font-size:12px; }
     .floating-toolbar .toolbar-select { height:26px; font-size:12px; }
     .floating-toolbar #ftFontFamily { min-width: 90px; }
+    .floating-toolbar #ftFontWeight { width: 80px; }
     .floating-toolbar #ftFontSize { width: 44px; text-align:center; }
     /* Inner separator within a group */
     .floating-toolbar .ft-sep { width:1px; height:18px; background:var(--border-light); margin:0 3px; display:inline-block; vertical-align:middle; }
@@ -1138,7 +1142,7 @@
       cursor:pointer; font-size:12px; text-align:center; transition:all 0.15s; color:var(--text-secondary);
     }
     .panel-btn:hover { border-color:var(--accent); color:var(--accent); }
-    .panel-btn.active { background: var(--accent); border-color: var(--accent); color: #333; }
+    .panel-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     .panel-btn i { margin-right:4px; }
     .no-selection { padding:32px 20px; text-align:center; color:var(--text-muted); }
     .no-selection i { font-size:32px; margin-bottom:12px; opacity:0.3; }
@@ -1221,7 +1225,7 @@
     .ctx-item:hover { background:var(--bg-hover); }
     .ctx-item.disabled { opacity:0.4; cursor:not-allowed; }
     .ctx-item .shortcut { color:var(--text-muted); font-size:11px; }
-    .ctx-item i.fa-fw { width:14px; color: #ffdb00; }
+    .ctx-item i.fa-fw { width:14px; color: #6366f1; }
     .ctx-divider { height:1px; background:var(--border-color); margin:4px 0; }
     .ctx-item.danger { color:var(--danger); }
     .ctx-item.danger i { color:var(--danger); }
@@ -1342,9 +1346,9 @@
 <div class="entry-screen" id="entryScreen">
   <div class="entry-header">
     <div class="brand">
-      <img src="images/logo.png" alt="DEERMA">
+      <img src="images/logo-manual.png" alt="说明书制作平台">
       <div>
-        <div class="brand-text">DEERMA 产品说明书</div>
+        <div class="brand-text">说明书制作平台</div>
         <div class="brand-sub">产品目录</div>
       </div>
     </div>
@@ -1552,7 +1556,8 @@
   <!-- ===== Header ===== -->
   <header class="header">
     <div class="logo">
-      <img src="images/logo.png" alt="DEERMA">
+      <img src="images/logo-manual.png" alt="说明书制作平台">
+      <span class="logo-text">说明书制作平台</span>
     </div>
 
     <nav class="menu-bar" id="menuBar">
@@ -1854,8 +1859,17 @@
             <option value="'SimSun', serif">宋体</option>
             <option value="'Source Han Sans', sans-serif">思源黑体</option>
             <option value="Arial, sans-serif">Arial</option>
+            <option value="'MiSans', sans-serif">MiSans</option>
             <option value="'Times New Roman', serif">Times New Roman</option>
             <option value="Georgia, serif">Georgia</option>
+          </select>
+          <select class="toolbar-select" id="fontWeightSelect" style="width:90px;" onchange="applyStyle('fontWeight', this.value)" title="粗细">
+            <option value="normal">Regular</option>
+            <option value="300">Light</option>
+            <option value="400">Normal</option>
+            <option value="500">Medium</option>
+            <option value="600">Semibold</option>
+            <option value="700">Bold</option>
           </select>
           <input type="number" class="toolbar-select" id="fontSizeInput" value="13" min="6" max="200" style="width:50px;text-align:center;" onchange="applyStyle('fontSize', this.value+'px')" title="字号">
         </div>
@@ -2052,6 +2066,15 @@
                   <option value="'SimSun', serif">宋体</option>
                   <option value="'Source Han Sans', sans-serif">思源黑体</option>
                   <option value="Arial, sans-serif">Arial</option>
+                  <option value="'MiSans', sans-serif">MiSans</option>
+                </select>
+                <select class="panel-select" id="propFontWeight" style="max-width:90px;" onchange="applyStyle('fontWeight', this.value)">
+                  <option value="normal">Regular</option>
+                  <option value="300">Light</option>
+                  <option value="400">Normal</option>
+                  <option value="500">Medium</option>
+                  <option value="600">Semibold</option>
+                  <option value="700">Bold</option>
                 </select>
                 <select class="panel-select" id="propFontSize" onchange="applyStyle('fontSize', this.value+'px')" style="max-width:60px;">
                   <option value="10">10</option><option value="11">11</option><option value="12">12</option>
@@ -3579,7 +3602,7 @@ function renderSteps(el) {
   let html = '<div style="padding:4px;">';
   steps.forEach((step, i) => {
     html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start;">
-      <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#333;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;font-weight:700;">${i+1}</div>
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;font-weight:700;">${i+1}</div>
       <div class="step-text" style="font-size:13px;line-height:1.6;flex:1;cursor:text;" ondblclick="startListItemEdit('${el.id}','steps',${i},'.step-text:nth-of-type(${i+1})')">${escapeHtml(step)}</div>
     </div>`;
   });
@@ -4280,6 +4303,8 @@ function updatePropsPanel() {
 
   const s = el.style || {};
   if (document.getElementById('propFontFamily')) document.getElementById('propFontFamily').value = (s.fontFamily || 'inherit').replace(/['"]/g,'');
+  if (document.getElementById('propFontWeight')) document.getElementById('propFontWeight').value = s.fontWeight || 'normal';
+  if (document.getElementById('fontWeightSelect')) document.getElementById('fontWeightSelect').value = s.fontWeight || 'normal';
   if (document.getElementById('propFontSize')) {
     const fs = s.fontSize ? s.fontSize.replace('px','') : '13';
     document.getElementById('propFontSize').value = fs;
@@ -4634,8 +4659,10 @@ function updateFloatingToolbar() {
   const el = getSelected();
   const s = el ? (el.style || {}) : {};
   const ff = document.getElementById('ftFontFamily');
+  const fw = document.getElementById('ftFontWeight');
   const fs = document.getElementById('ftFontSize');
   if (ff) ff.value = s.fontFamily || 'inherit';
+  if (fw) fw.value = s.fontWeight || 'normal';
   if (fs) fs.value = parseInt(s.fontSize) || 13;
   // Colors
   const tColor = document.getElementById('ftTextColor');
@@ -9186,6 +9213,14 @@ init();
       <option value="Arial, sans-serif">Arial</option>
       <option value="'Times New Roman', serif">Times New Roman</option>
       <option value="Georgia, serif">Georgia</option>
+    </select>
+    <select class="toolbar-select" id="ftFontWeight" style="width:80px;" onchange="applyStyle('fontWeight', this.value)" title="粗细">
+      <option value="normal">Regular</option>
+      <option value="300">Light</option>
+      <option value="400">Normal</option>
+      <option value="500">Medium</option>
+      <option value="600">Semibold</option>
+      <option value="700">Bold</option>
     </select>
     <input type="number" class="toolbar-select" id="ftFontSize" value="13" min="6" max="200" onchange="applyStyle('fontSize', this.value+'px')" title="字号">
   </div>
