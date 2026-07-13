@@ -1249,8 +1249,10 @@
       display:flex; align-items:center; justify-content:space-between; padding:0 20px;
     }
     .preview-header .pv-title { font-weight:600; font-size:15px; }
-    .preview-body { flex:1; overflow:auto; display:flex; justify-content:center; padding:30px; }
-    .preview-page { background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); margin-bottom:20px; position:relative; }
+    .preview-body { flex:1; overflow:auto; display:flex; padding:30px; }
+    /* 缩放容器：用显式尺寸撑开滚动区，margin:auto 居中且允许溢出滚动（避免 justify-content:center 裁掉顶部/左侧） */
+    .preview-scaler { margin:auto; position:relative; }
+    .preview-page { background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); position:absolute; top:0; left:0; transform-origin:0 0; }
 
     /* Collaborator cursors (simulation) */
     .collab-cursor {
@@ -2558,7 +2560,13 @@
 <div class="preview-overlay" id="previewOverlay">
   <div class="preview-header">
     <div class="pv-title"><i class="fas fa-eye"></i> 预览模式 - 产品说明书</div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:4px;align-items:center;padding:2px 6px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-primary);">
+        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="changePreviewZoom(-0.1)" title="缩小"><i class="fas fa-search-minus"></i></button>
+        <span style="line-height:28px;font-size:13px;min-width:50px;text-align:center;cursor:pointer;" id="previewZoomDisplay" onclick="setPreviewZoom(1)" title="点击恢复 100%">100%</span>
+        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="changePreviewZoom(0.1)" title="放大"><i class="fas fa-search-plus"></i></button>
+        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="fitPreview()" title="适应窗口"><i class="fas fa-expand"></i></button>
+      </div>
       <button class="btn btn-outline btn-sm" onclick="changePreviewPage(-1)"><i class="fas fa-chevron-left"></i> 上一页</button>
       <span style="line-height:30px;font-size:13px;" id="previewPageNum">1 / 1</span>
       <button class="btn btn-outline btn-sm" onclick="changePreviewPage(1)">下一页 <i class="fas fa-chevron-right"></i></button>
@@ -2643,6 +2651,7 @@ let state = {
   clipboard: null,
   styleClipboard: null,
   zoom: 1,
+  previewZoom: 1,
   showBg: true,
   elementIdCounter: 0,
   groupIdCounter: 0,
@@ -8536,6 +8545,7 @@ function togglePreview() {
     state.previewPageIdx = 0;
     renderPreview();
     overlay.classList.add('show');
+    fitPreview();
   }
 }
 
@@ -8544,11 +8554,15 @@ function renderPreview() {
   const page = state.pages[state.previewPageIdx];
   if (!page) return;
   body.innerHTML = '';
+
+  const scaler = document.createElement('div');
+  scaler.className = 'preview-scaler';
+  scaler.id = 'previewScaler';
+
   const previewPage = document.createElement('div');
   previewPage.className = 'preview-page';
   previewPage.style.width = PAGE_W + 'px';
   previewPage.style.height = PAGE_H + 'px';
-  previewPage.style.position = 'relative';
 
   page.elements.forEach(el => {
     if (el.visible === false) return;
@@ -8572,8 +8586,10 @@ function renderPreview() {
     previewPage.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);">空白页</div>';
   }
 
-  body.appendChild(previewPage);
+  scaler.appendChild(previewPage);
+  body.appendChild(scaler);
   document.getElementById('previewPageNum').textContent = (state.previewPageIdx + 1) + ' / ' + state.pages.length;
+  applyPreviewZoom();
 }
 
 function changePreviewPage(dir) {
@@ -8581,6 +8597,72 @@ function changePreviewPage(dir) {
   if (newIdx < 0 || newIdx >= state.pages.length) return;
   state.previewPageIdx = newIdx;
   renderPreview();
+}
+
+// ============================
+//  预览模式缩放
+// ============================
+function applyPreviewZoom() {
+  const scaler = document.getElementById('previewScaler');
+  if (scaler) {
+    scaler.style.width = (PAGE_W * state.previewZoom) + 'px';
+    scaler.style.height = (PAGE_H * state.previewZoom) + 'px';
+    const page = scaler.querySelector('.preview-page');
+    if (page) page.style.transform = `scale(${state.previewZoom})`;
+  }
+  const disp = document.getElementById('previewZoomDisplay');
+  if (disp) disp.textContent = Math.round(state.previewZoom * 100) + '%';
+}
+
+function changePreviewZoom(delta) {
+  state.previewZoom = Math.max(0.1, Math.min(5, state.previewZoom + delta));
+  applyPreviewZoom();
+}
+
+function setPreviewZoom(scale) {
+  state.previewZoom = Math.max(0.1, Math.min(5, scale));
+  applyPreviewZoom();
+}
+
+function fitPreview() {
+  const body = document.getElementById('previewBody');
+  if (!body) return;
+  const ww = body.clientWidth - 60;
+  const wh = body.clientHeight - 60;
+  const scale = Math.min(ww / PAGE_W, wh / PAGE_H, 1);
+  state.previewZoom = Math.max(0.1, Math.min(5, scale));
+  applyPreviewZoom();
+}
+
+// 预览区 Ctrl/Cmd + 滚轮缩放（以光标为锚点）
+function onPreviewWheel(e) {
+  if (!(e.ctrlKey || e.metaKey)) return;   // 普通滚轮保持滚动
+  e.preventDefault();
+  const body = document.getElementById('previewBody');
+  const scaler = document.getElementById('previewScaler');
+  if (!scaler) return;
+  const rect = scaler.getBoundingClientRect();
+  const curr = state.previewZoom;
+  const delta = -e.deltaY * 0.0015;
+  const newZoom = Math.max(0.1, Math.min(5, curr + delta));
+  // 光标在“未缩放坐标”下的位置
+  const localX = (e.clientX - rect.left) / curr;
+  const localY = (e.clientY - rect.top) / curr;
+
+  state.previewZoom = newZoom;
+  scaler.style.width = (PAGE_W * newZoom) + 'px';
+  scaler.style.height = (PAGE_H * newZoom) + 'px';
+  const page = scaler.querySelector('.preview-page');
+  if (page) page.style.transform = `scale(${newZoom})`;
+
+  // 缩放后该点的新视觉位置，通过滚动补偿使其停在光标处
+  const newScreenX = rect.left + localX * newZoom;
+  const newScreenY = rect.top + localY * newZoom;
+  body.scrollLeft += (newScreenX - e.clientX);
+  body.scrollTop += (newScreenY - e.clientY);
+
+  const disp = document.getElementById('previewZoomDisplay');
+  if (disp) disp.textContent = Math.round(newZoom * 100) + '%';
 }
 
 // ============================
@@ -8814,6 +8896,9 @@ function init() {
 
   // 画布 Ctrl/Cmd + 滚轮缩放
   document.getElementById('canvasWrapper')?.addEventListener('wheel', onCanvasWheel, { passive: false });
+
+  // 预览区 Ctrl/Cmd + 滚轮缩放
+  document.getElementById('previewBody')?.addEventListener('wheel', onPreviewWheel, { passive: false });
 
   // 点击空白处关闭缩放预设菜单
   document.addEventListener('click', (e) => {
