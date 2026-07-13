@@ -45,9 +45,9 @@
       --icon-hover: var(--accent);
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    /* 全局线框图标规则：默认浅灰，hover 变色 */
-    i.fas, i.far, i.fab, i.fal { color: var(--icon-default); transition: color 0.15s; font-weight: 400; }
-    i.fas { font-weight: 400; } /* 强制所有图标用线框字重 */
+    /* 全局图标规则：默认线框浅灰，hover 变主题色 */
+    i.fas, i.far, i.fab, i.fal { color: var(--icon-default); transition: color 0.15s; }
+    /* far = 线框/轮廓（主要使用）；fas = 实心（仅特殊场景保留原始 weight） */
     .toolbar-btn:hover i, .toolbar-btn.active i,
     .sidebar-tab:hover i, .sidebar-tab.active i,
     .panel-tab:hover i, .panel-tab.active i,
@@ -1378,10 +1378,10 @@
     </div>
     <div class="entry-header-right">
       <button class="btn btn-primary btn-sm" id="continueEditBtn" style="display:none;" onclick="continueLastEdit()">
-        <i class="fas fa-history"></i> 继续上次编辑
+        <i class="far fa-history"></i> 继续上次编辑
       </button>
       <div class="search-box">
-        <i class="fas fa-search"></i>
+        <i class="far fa-search"></i>
         <input type="text" placeholder="搜索说明书..." oninput="filterCatalog(this.value)">
       </div>
     </div>
@@ -1411,7 +1411,7 @@
 
   <!-- 悬浮新建按钮 -->
   <button class="fab-new" onclick="openTypeSelectModal()">
-    <i class="fas fa-plus"></i> 新建说明书
+    <i class="far fa-plus"></i> 新建说明书
   </button>
 </div>
 
@@ -1420,7 +1420,7 @@
   <div class="modal-dialog np-dialog">
     <div class="modal-header np-header">
       <h2><span class="np-title-bar"></span>新建项目</h2>
-      <button class="modal-close" onclick="closeTypeSelectModal()"><i class="fas fa-times"></i></button>
+      <button class="modal-close" onclick="closeTypeSelectModal()"><i class="far fa-times"></i></button>
     </div>
     <div class="modal-body np-body">
 
@@ -1458,7 +1458,7 @@
         <div class="size-dropdown" id="sizeDropdown" onclick="toggleSizeDropdown(event)">
           <div class="size-dropdown-trigger">
             <span class="size-dropdown-trigger-text" id="sizeDropdownText">A5 (148 × 210 mm)</span>
-            <i class="fas fa-chevron-down size-dropdown-trigger-arrow"></i>
+            <i class="far fa-chevron-down size-dropdown-trigger-arrow"></i>
           </div>
           <div class="size-dropdown-menu" id="sizeDropdownMenu"></div>
         </div>
@@ -1468,7 +1468,7 @@
       <div class="np-field">
         <label class="np-label">PDF 导入 <span class="np-optional">可选</span></label>
         <div class="np-pdf-area" id="npPdfArea" onclick="document.getElementById('npPdfFile').click()">
-          <i class="fas fa-file-pdf"></i>
+          <i class="far fa-file-pdf"></i>
           <span id="npPdfLabel">未选择 PDF 文件</span>
           <small>创建后自动按编辑器"导入PDF"流程导入</small>
           <button type="button" class="btn btn-outline btn-sm np-pdf-btn" onclick="event.stopPropagation(); document.getElementById('npPdfFile').click();">选择 PDF</button>
@@ -1489,7 +1489,7 @@
         <div class="np-adv-header" onclick="toggleNpAdvanced()">
           <span><strong>高级设置</strong> <span class="np-optional">可选</span></span>
           <small id="npAdvSummary">默认 · A5 · RGB</small>
-          <i class="fas fa-chevron-down np-adv-arrow" id="npAdvArrow"></i>
+          <i class="far fa-chevron-down np-adv-arrow" id="npAdvArrow"></i>
         </div>
         <div class="np-adv-body" id="npAdvBody">
           <div class="np-row">
@@ -1555,7 +1555,7 @@
           </div>
           <div class="type-select-card np-tpl-card" data-type="safety" data-tpl="safety" onclick="selectNpTemplate(this)">
             <div class="template-sub-preview" style="display:flex;align-items:center;justify-content:center;color:#5b8def;">
-              <i class="fas fa-shield-alt" style="font-size:36px;"></i>
+              <i class="far fa-shield" style="font-size:36px;"></i>
             </div>
             <div class="template-sub-info"><h5>安规说明书模板</h5><span>警告+合规结构化布局</span></div>
           </div>
@@ -1595,22 +1595,22 @@
 
     <div class="header-actions">
       <button class="btn btn-outline btn-sm" onclick="exitToEntryScreen()" title="返回模板选择">
-        <i class="fas fa-arrow-left"></i> 返回
+        <i class="far fa-arrow-left"></i> 返回
       </button>
       <button class="btn btn-outline btn-sm" onclick="togglePreview()">
-        <i class="fas fa-eye"></i> 预览
+        <i class="far fa-eye"></i> 预览
       </button>
       <button class="btn btn-outline btn-sm" onclick="openModal('importModal')">
-        <i class="fas fa-upload"></i> 导入
+        <i class="far fa-upload"></i> 导入
       </button>
       <button class="btn btn-primary btn-sm" onclick="openModal('exportModal')">
-        <i class="fas fa-download"></i> 导出
+        <i class="far fa-download"></i> 导出
       </button>
       <button class="btn btn-outline btn-sm" onclick="saveDraft()" title="将当前说明书保存为草稿">
-        <i class="fas fa-save"></i> 保存草稿
+        <i class="far fa-save"></i> 保存草稿
       </button>
       <button class="btn btn-outline btn-sm" onclick="openDrafts()" title="查看与管理已保存的草稿">
-        <i class="fas fa-box-archive"></i> 草稿箱
+        <i class="far fa-box-archive"></i> 草稿箱
       </button>
     </div>
   </header>
@@ -1621,234 +1621,234 @@
     <!-- ===== Left Sidebar ===== -->
     <aside class="sidebar">
       <div class="sidebar-tabs">
-        <div class="sidebar-tab active" data-tab="components" onclick="switchSidebarTab('components')"><i class="fas fa-cubes"></i> 组件</div>
+        <div class="sidebar-tab active" data-tab="components" onclick="switchSidebarTab('components')"><i class="far fa-cubes"></i> 组件</div>
       </div>
       <div class="sidebar-content" id="sidebarContent">
         <!-- Components Tab -->
         <div id="tab-components" class="sidebar-tab-content">
           <div class="sidebar-section">
             <div class="search-box">
-              <i class="fas fa-search"></i>
+              <i class="far fa-search"></i>
               <input type="text" placeholder="搜索组件..." id="compSearch" oninput="filterComponents(this.value)">
             </div>
           </div>
           <div class="sidebar-section">
             <div class="sidebar-section-header open" onclick="toggleSection(this)">
-              <span class="section-title-text"><i class="fas fa-cube"></i> 基础组件</span>
-              <i class="fas fa-chevron-right section-chevron"></i>
+              <span class="section-title-text"><i class="far fa-cube"></i> 基础组件</span>
+              <i class="far fa-chevron-right section-chevron"></i>
             </div>
             <div class="sidebar-section-collapse" id="sect-basic">
             <div class="comp-grid" id="basicComponents">
               <div class="comp-item" draggable="true" data-type="text" data-name="文本框" onclick="quickAdd('text')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-font"></i><span>文本框</span>
+                <i class="far fa-font"></i><span>文本框</span>
               </div>
               <div class="comp-item" draggable="true" data-type="image" data-name="图片" onclick="quickAdd('image')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-image"></i><span>图片</span>
+                <i class="far fa-image"></i><span>图片</span>
               </div>
               <div class="comp-item" draggable="true" data-type="figure" data-name="图文块" onclick="quickAdd('figure')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-panorama"></i><span>图文块<small>Figure</small></span>
+                <i class="far fa-panorama"></i><span>图文块<small>Figure</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="icon" data-name="图标" onclick="quickAdd('icon')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-icons"></i><span>图标<small>Icon</small></span>
+                <i class="far fa-icons"></i><span>图标<small>Icon</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="table" data-name="表格" onclick="openTablePicker(event)" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-table"></i><span>表格</span>
+                <i class="far fa-table"></i><span>表格</span>
               </div>
               <div class="comp-item" draggable="true" data-type="qrcode" data-name="二维码" onclick="quickAdd('qrcode')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-qrcode"></i><span>二维码<small>QR</small></span>
+                <i class="far fa-qrcode"></i><span>二维码<small>QR</small></span>
               </div>
             </div>
             </div>
           </div>
           <div class="sidebar-section">
             <div class="sidebar-section-header open" onclick="toggleSection(this)">
-              <span class="section-title-text"><i class="fas fa-font"></i> 文字样式</span>
-              <i class="fas fa-chevron-right section-chevron"></i>
+              <span class="section-title-text"><i class="far fa-font"></i> 文字样式</span>
+              <i class="far fa-chevron-right section-chevron"></i>
             </div>
             <div class="sidebar-section-collapse" id="sect-text">
             <div class="comp-grid" id="textComponents">
               <div class="comp-item" draggable="true" data-type="h1" data-name="一级标题" onclick="quickAdd('h1')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-heading"></i><span>一级标题<small>H1</small></span>
+                <i class="far fa-heading"></i><span>一级标题<small>H1</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="h2" data-name="二级标题" onclick="quickAdd('h2')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-heading"></i><span>二级标题<small>H2</small></span>
+                <i class="far fa-heading"></i><span>二级标题<small>H2</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="h3" data-name="三级标题" onclick="quickAdd('h3')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-heading"></i><span>三级标题<small>H3</small></span>
+                <i class="far fa-heading"></i><span>三级标题<small>H3</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="body" data-name="正文" onclick="quickAdd('body')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-align-left"></i><span>正文<small>Body</small></span>
+                <i class="far fa-align-left"></i><span>正文<small>Body</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="body-small" data-name="小号正文" onclick="quickAdd('body-small')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-align-left"></i><span>小号正文<small>Small</small></span>
+                <i class="far fa-align-left"></i><span>小号正文<small>Small</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="note-text" data-name="注释小字" onclick="quickAdd('note-text')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-comment-dots"></i><span>注释小字<small>Note</small></span>
+                <i class="far fa-comment-dots"></i><span>注释小字<small>Note</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="quote" data-name="引用块" onclick="quickAdd('quote')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-quote-left"></i><span>引用块<small>Quote</small></span>
+                <i class="far fa-quote-left"></i><span>引用块<small>Quote</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="page-number" data-name="页码" onclick="quickAdd('page-number')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-hashtag"></i><span>页码<small>Page No.</small></span>
+                <i class="far fa-hashtag"></i><span>页码<small>Page No.</small></span>
               </div>
             </div>
             </div>
           </div>
           <div class="sidebar-section">
             <div class="sidebar-section-header open" onclick="toggleSection(this)">
-              <span class="section-title-text"><i class="fas fa-list-ul"></i> 列表与排版</span>
-              <i class="fas fa-chevron-right section-chevron"></i>
+              <span class="section-title-text"><i class="far fa-list-ul"></i> 列表与排版</span>
+              <i class="far fa-chevron-right section-chevron"></i>
             </div>
             <div class="sidebar-section-collapse" id="sect-list">
             <div class="comp-grid" id="listComponents">
               <div class="comp-item" draggable="true" data-type="bullet-list" data-name="项目符号" onclick="quickAdd('bullet-list')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-list-ul"></i><span>项目符号<small>Bullets</small></span>
+                <i class="far fa-list-ul"></i><span>项目符号<small>Bullets</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="numbered-list" data-name="编号列表" onclick="quickAdd('numbered-list')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-list-ol"></i><span>编号列表<small>Numbered</small></span>
+                <i class="far fa-list-ol"></i><span>编号列表<small>Numbered</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="two-col" data-name="双栏文本" onclick="quickAdd('two-col')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-table-columns"></i><span>双栏文本<small>2 Col</small></span>
+                <i class="far fa-table-columns"></i><span>双栏文本<small>2 Col</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="callout" data-name="标注" onclick="quickAdd('callout')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-location-dot"></i><span>标注<small>Callout</small></span>
+                <i class="far fa-location-dot"></i><span>标注<small>Callout</small></span>
               </div>
             </div>
             </div>
           </div>
           <div class="sidebar-section">
             <div class="sidebar-section-header open" onclick="toggleSection(this)">
-              <span class="section-title-text"><i class="fas fa-shapes"></i> 图形</span>
-              <i class="fas fa-chevron-right section-chevron"></i>
+              <span class="section-title-text"><i class="far fa-shapes"></i> 图形</span>
+              <i class="far fa-chevron-right section-chevron"></i>
             </div>
             <div class="sidebar-section-collapse" id="sect-shape">
             <div class="comp-grid" id="shapeComponents">
               <div class="comp-item" draggable="true" data-type="shape" data-name="矩形" onclick="quickAdd('shape')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-square"></i><span>矩形</span>
+                <i class="far fa-square"></i><span>矩形</span>
               </div>
               <div class="comp-item" draggable="true" data-type="shape-rounded" data-name="圆角矩形" onclick="quickAdd('shape-rounded')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-square-full" style="border-radius:4px;overflow:hidden;"></i><span>圆角矩形</span>
+                <i class="far fa-square-full" style="border-radius:4px;overflow:hidden;"></i><span>圆角矩形</span>
               </div>
               <div class="comp-item" draggable="true" data-type="shape-circle" data-name="圆形" onclick="quickAdd('shape-circle')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-circle"></i><span>圆形</span>
+                <i class="far fa-circle"></i><span>圆形</span>
               </div>
               <div class="comp-item" draggable="true" data-type="line" data-name="直线" onclick="quickAdd('line')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-grip-lines"></i><span>直线</span>
+                <i class="far fa-grip-lines"></i><span>直线</span>
               </div>
               <div class="comp-item" draggable="true" data-type="arrow" data-name="箭头" onclick="quickAdd('arrow')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-arrow-right-long"></i><span>箭头</span>
+                <i class="far fa-arrow-right-long"></i><span>箭头</span>
               </div>
               <div class="comp-item" draggable="true" data-type="divider" data-name="分割线" onclick="quickAdd('divider')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-minus"></i><span>分割线</span>
+                <i class="far fa-minus"></i><span>分割线</span>
               </div>
             </div>
             </div>
           </div>
           <div class="sidebar-section">
             <div class="sidebar-section-header open" onclick="toggleSection(this)">
-              <span class="section-title-text"><i class="fas fa-book"></i> 说明书组件</span>
-              <i class="fas fa-chevron-right section-chevron"></i>
+              <span class="section-title-text"><i class="far fa-book"></i> 说明书组件</span>
+              <i class="far fa-chevron-right section-chevron"></i>
             </div>
             <div class="sidebar-section-collapse" id="sect-doc">
             <div class="comp-grid" id="docComponents">
               <div class="comp-item full" draggable="true" data-type="cover" data-name="封面" onclick="quickAdd('cover')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-book-open"></i><span>封面<small>Cover</small></span>
+                <i class="far fa-book-open"></i><span>封面<small>Cover</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="toc" data-name="目录" onclick="quickAdd('toc')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-list-ol"></i><span>目录<small>Contents</small></span>
+                <i class="far fa-list-ol"></i><span>目录<small>Contents</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="heading" data-name="章节标题" onclick="quickAdd('heading')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-heading"></i><span>章节标题<small>Section Heading</small></span>
+                <i class="far fa-heading"></i><span>章节标题<small>Section Heading</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="steps" data-name="操作步骤" onclick="quickAdd('steps')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-shoe-prints"></i><span>操作步骤<small>Steps</small></span>
+                <i class="far fa-shoe-prints"></i><span>操作步骤<small>Steps</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="specs-table" data-name="参数表格" onclick="quickAdd('specs-table')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-table"></i><span>参数表格<small>Specs Table</small></span>
+                <i class="far fa-table"></i><span>参数表格<small>Specs Table</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="spec-grid" data-name="参数网格" onclick="quickAdd('spec-grid')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-border-all"></i><span>参数网格<small>Spec Grid</small></span>
+                <i class="far fa-border-all"></i><span>参数网格<small>Spec Grid</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="feature-card" data-name="特性卡片" onclick="quickAdd('feature-card')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-star"></i><span>特性卡片<small>Feature Card</small></span>
+                <i class="far fa-star"></i><span>特性卡片<small>Feature Card</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="packing-list" data-name="包装清单" onclick="quickAdd('packing-list')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-box-open"></i><span>包装清单<small>In the Box</small></span>
+                <i class="far fa-box-open"></i><span>包装清单<small>In the Box</small></span>
               </div>
             </div>
             </div>
           </div>
           <div class="sidebar-section">
             <div class="sidebar-section-header open" onclick="toggleSection(this)">
-              <span class="section-title-text"><i class="fas fa-triangle-exclamation"></i> 安全标识</span>
-              <i class="fas fa-chevron-right section-chevron"></i>
+              <span class="section-title-text"><i class="far fa-triangle-exclamation"></i> 安全标识</span>
+              <i class="far fa-chevron-right section-chevron"></i>
             </div>
             <div class="sidebar-section-collapse" id="sect-safety">
             <div class="comp-grid" id="safetyComponents">
               <div class="comp-item full" draggable="true" data-type="warning" data-name="警告框" onclick="quickAdd('warning')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-triangle-exclamation" style="color:#f59e0b;"></i><span>警告框<small>Warning</small></span>
+                <i class="far fa-triangle-exclamation" style="color:#f59e0b;"></i><span>警告框<small>Warning</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="danger" data-name="危险框" onclick="quickAdd('danger')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-radiation" style="color:#dc2626;"></i><span>危险框<small>Danger</small></span>
+                <i class="far fa-radiation" style="color:#dc2626;"></i><span>危险框<small>Danger</small></span>
               </div>
               <div class="comp-item full" draggable="true" data-type="note" data-name="注意事项" onclick="quickAdd('note')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-circle-info" style="color:#3b82f6;"></i><span>注意事项<small>Note</small></span>
+                <i class="far fa-circle-info" style="color:#3b82f6;"></i><span>注意事项<small>Note</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="warning-text" data-name="警告字" onclick="quickAdd('warning-text')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-triangle-exclamation"></i><span>警告<small>WARNING</small></span>
+                <i class="far fa-triangle-exclamation"></i><span>警告<small>WARNING</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="caution-text" data-name="注意字" onclick="quickAdd('caution-text')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-circle-info"></i><span>注意<small>CAUTION</small></span>
+                <i class="far fa-circle-info"></i><span>注意<small>CAUTION</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="prohibition" data-name="禁止标识" onclick="quickAdd('prohibition')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-ban" style="color:#dc2626;"></i><span>禁止<small>Prohibited</small></span>
+                <i class="far fa-ban" style="color:#dc2626;"></i><span>禁止<small>Prohibited</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="mandatory" data-name="强制标识" onclick="quickAdd('mandatory')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-circle-check" style="color:#2563eb;"></i><span>强制<small>Mandatory</small></span>
+                <i class="far fa-circle-check" style="color:#2563eb;"></i><span>强制<small>Mandatory</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="risk-text" data-name="窒息风险" onclick="quickAdd('risk-text')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-skull-crossbones"></i><span>窒息风险<small>Choking</small></span>
+                <i class="far fa-skull-crossbones"></i><span>窒息风险<small>Choking</small></span>
               </div>
             </div>
             </div>
           </div>
           <div class="sidebar-section">
             <div class="sidebar-section-header open" onclick="toggleSection(this)">
-              <span class="section-title-text"><i class="fas fa-language"></i> 多语言</span>
-              <i class="fas fa-chevron-right section-chevron"></i>
+              <span class="section-title-text"><i class="far fa-language"></i> 多语言</span>
+              <i class="far fa-chevron-right section-chevron"></i>
             </div>
             <div class="sidebar-section-collapse" id="sect-i18n">
             <div class="comp-grid" id="i18nComponents">
               <div class="comp-item full" draggable="true" data-type="bilingual" data-name="双语对照" onclick="quickAdd('bilingual')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-language"></i><span>双语对照<small>Bilingual Pair</small></span>
+                <i class="far fa-language"></i><span>双语对照<small>Bilingual Pair</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="lang-badge" data-name="语言标签" onclick="quickAdd('lang-badge')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-tag"></i><span>语言标签<small>Lang</small></span>
+                <i class="far fa-tag"></i><span>语言标签<small>Lang</small></span>
               </div>
               <div class="comp-item" draggable="true" data-type="toc-title" data-name="目录标题" onclick="quickAdd('toc-title')" ondragstart="onCompDragStart(event)">
-                <i class="fas fa-font"></i><span>目录标题<small>TOC</small></span>
+                <i class="far fa-font"></i><span>目录标题<small>TOC</small></span>
               </div>
             </div>
             </div>
           </div>
           <div class="sidebar-section">
             <div class="sidebar-section-header open" onclick="toggleSection(this)">
-              <span class="section-title-text"><i class="fas fa-th-large"></i> 模板</span>
-              <i class="fas fa-chevron-right section-chevron"></i>
+              <span class="section-title-text"><i class="far fa-th-large"></i> 模板</span>
+              <i class="far fa-chevron-right section-chevron"></i>
             </div>
             <div class="sidebar-section-collapse" id="sect-template">
             <div class="comp-grid">
               <div class="comp-item full" onclick="openModal('templateModal')">
-                <i class="fas fa-file-alt"></i><span>产品说明书模板</span>
+                <i class="far fa-file-alt"></i><span>产品说明书模板</span>
               </div>
               <div class="comp-item full" onclick="openModal('templateModal')">
-                <i class="fas fa-laptop"></i><span>技术手册模板</span>
+                <i class="far fa-laptop"></i><span>技术手册模板</span>
               </div>
               <div class="comp-item full" onclick="openModal('templateModal')">
-                <i class="fas fa-microchip"></i><span>电子产品说明书</span>
+                <i class="far fa-microchip"></i><span>电子产品说明书</span>
               </div>
               <div class="comp-item full" onclick="openModal('templateModal')">
-                <i class="fas fa-heartbeat"></i><span>医疗器械手册</span>
+                <i class="far fa-heartbeat"></i><span>医疗器械手册</span>
               </div>
             </div>
             </div>
@@ -1862,18 +1862,18 @@
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="undoBtn" title="撤销 (Ctrl+Z)" onclick="undo()"><i class="fas fa-undo"></i></button>
-          <button class="toolbar-btn" id="redoBtn" title="重做 (Ctrl+Y)" onclick="redo()"><i class="fas fa-redo"></i></button>
+          <button class="toolbar-btn" id="undoBtn" title="撤销 (Ctrl+Z)" onclick="undo()"><i class="far fa-undo"></i></button>
+          <button class="toolbar-btn" id="redoBtn" title="重做 (Ctrl+Y)" onclick="redo()"><i class="far fa-redo"></i></button>
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="cutBtn" title="剪切 (Ctrl+X)" onclick="cutElement()"><i class="fas fa-cut"></i></button>
-          <button class="toolbar-btn" id="copyBtn" title="复制 (Ctrl+C)" onclick="copyElement()"><i class="fas fa-copy"></i></button>
-          <button class="toolbar-btn" id="pasteBtn" title="粘贴 (Ctrl+V)" onclick="pasteElement()"><i class="fas fa-paste"></i></button>
-          <button class="toolbar-btn" id="deleteBtn" title="删除 (Delete)" onclick="deleteSelected()"><i class="fas fa-trash"></i></button>
+          <button class="toolbar-btn" id="cutBtn" title="剪切 (Ctrl+X)" onclick="cutElement()"><i class="far fa-cut"></i></button>
+          <button class="toolbar-btn" id="copyBtn" title="复制 (Ctrl+C)" onclick="copyElement()"><i class="far fa-copy"></i></button>
+          <button class="toolbar-btn" id="pasteBtn" title="粘贴 (Ctrl+V)" onclick="pasteElement()"><i class="far fa-paste"></i></button>
+          <button class="toolbar-btn" id="deleteBtn" title="删除 (Delete)" onclick="deleteSelected()"><i class="far fa-trash"></i></button>
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="copyStyleBtn" title="复制样式 (Ctrl+Shift+C)" onclick="copyStyle()"><i class="fas fa-clone"></i></button>
-          <button class="toolbar-btn" id="pasteStyleBtn" title="粘贴样式 (Ctrl+Shift+V)" onclick="pasteStyle()"><i class="fas fa-paint-brush"></i></button>
+          <button class="toolbar-btn" id="copyStyleBtn" title="复制样式 (Ctrl+Shift+C)" onclick="copyStyle()"><i class="far fa-clone"></i></button>
+          <button class="toolbar-btn" id="pasteStyleBtn" title="粘贴样式 (Ctrl+Shift+V)" onclick="pasteStyle()"><i class="far fa-paint-brush"></i></button>
         </div>
         <div class="toolbar-group">
           <select class="toolbar-select" id="fontFamilySelect" onchange="applyStyle('fontFamily', this.value)" title="字体">
@@ -1898,50 +1898,50 @@
           <input type="number" class="toolbar-select" id="fontSizeInput" value="13" min="6" max="200" style="width:50px;text-align:center;" onchange="applyStyle('fontSize', this.value+'px')" title="字号">
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="boldBtn" title="加粗 (Ctrl+B)" onclick="toggleStyle('fontWeight','bold','normal')"><i class="fas fa-bold"></i></button>
-          <button class="toolbar-btn" id="italicBtn" title="斜体 (Ctrl+I)" onclick="toggleStyle('fontStyle','italic','normal')"><i class="fas fa-italic"></i></button>
-          <button class="toolbar-btn" id="underlineBtn" title="下划线 (Ctrl+U)" onclick="toggleStyle('textDecoration','underline','none')"><i class="fas fa-underline"></i></button>
+          <button class="toolbar-btn" id="boldBtn" title="加粗 (Ctrl+B)" onclick="toggleStyle('fontWeight','bold','normal')"><i class="far fa-bold"></i></button>
+          <button class="toolbar-btn" id="italicBtn" title="斜体 (Ctrl+I)" onclick="toggleStyle('fontStyle','italic','normal')"><i class="far fa-italic"></i></button>
+          <button class="toolbar-btn" id="underlineBtn" title="下划线 (Ctrl+U)" onclick="toggleStyle('textDecoration','underline','none')"><i class="far fa-underline"></i></button>
           <input type="color" class="toolbar-btn" style="width:30px;padding:2px;" title="文字颜色" onchange="applyStyle('color', this.value)" id="textColorPicker">
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="alignLeftBtn" title="左对齐" onclick="applyStyle('textAlign','left')"><i class="fas fa-align-left"></i></button>
-          <button class="toolbar-btn" id="alignCenterBtn" title="居中" onclick="applyStyle('textAlign','center')"><i class="fas fa-align-center"></i></button>
-          <button class="toolbar-btn" id="alignRightBtn" title="右对齐" onclick="applyStyle('textAlign','right')"><i class="fas fa-align-right"></i></button>
+          <button class="toolbar-btn" id="alignLeftBtn" title="左对齐" onclick="applyStyle('textAlign','left')"><i class="far fa-align-left"></i></button>
+          <button class="toolbar-btn" id="alignCenterBtn" title="居中" onclick="applyStyle('textAlign','center')"><i class="far fa-align-center"></i></button>
+          <button class="toolbar-btn" id="alignRightBtn" title="右对齐" onclick="applyStyle('textAlign','right')"><i class="far fa-align-right"></i></button>
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="alignLeftEdgeBtn" title="左对齐" onclick="alignElements('left')" data-tooltip="左对齐"><i class="fas fa-align-left"></i></button>
-          <button class="toolbar-btn" id="alignCenterHBtn" title="水平居中" onclick="alignElements('centerH')" data-tooltip="水平居中"><i class="fas fa-grip-lines"></i></button>
-          <button class="toolbar-btn" id="alignRightEdgeBtn" title="右对齐" onclick="alignElements('right')" data-tooltip="右对齐"><i class="fas fa-align-right"></i></button>
-          <button class="toolbar-btn" id="alignTopBtn" title="顶对齐" onclick="alignElements('top')" data-tooltip="顶对齐"><i class="fas fa-grip-lines-vertical"></i></button>
-          <button class="toolbar-btn" id="alignMiddleBtn" title="垂直居中" onclick="alignElements('middle')" data-tooltip="垂直居中"><i class="fas fa-equals"></i></button>
-          <button class="toolbar-btn" id="alignBottomBtn" title="底对齐" onclick="alignElements('bottom')" data-tooltip="底对齐"><i class="fas fa-grip-lines-vertical fa-rotate-90"></i></button>
+          <button class="toolbar-btn" id="alignLeftEdgeBtn" title="左对齐" onclick="alignElements('left')" data-tooltip="左对齐"><i class="far fa-align-left"></i></button>
+          <button class="toolbar-btn" id="alignCenterHBtn" title="水平居中" onclick="alignElements('centerH')" data-tooltip="水平居中"><i class="far fa-grip-lines"></i></button>
+          <button class="toolbar-btn" id="alignRightEdgeBtn" title="右对齐" onclick="alignElements('right')" data-tooltip="右对齐"><i class="far fa-align-right"></i></button>
+          <button class="toolbar-btn" id="alignTopBtn" title="顶对齐" onclick="alignElements('top')" data-tooltip="顶对齐"><i class="far fa-grip-lines-vertical"></i></button>
+          <button class="toolbar-btn" id="alignMiddleBtn" title="垂直居中" onclick="alignElements('middle')" data-tooltip="垂直居中"><i class="far fa-equals"></i></button>
+          <button class="toolbar-btn" id="alignBottomBtn" title="底对齐" onclick="alignElements('bottom')" data-tooltip="底对齐"><i class="far fa-grip-lines-vertical fa-rotate-90"></i></button>
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="distributeHBtn" title="水平等距分布" onclick="distributeElements('h')" data-tooltip="水平分布"><i class="fas fa-arrows-left-right"></i></button>
-          <button class="toolbar-btn" id="distributeVBtn" title="垂直等距分布" onclick="distributeElements('v')" data-tooltip="垂直分布"><i class="fas fa-arrows-up-down"></i></button>
+          <button class="toolbar-btn" id="distributeHBtn" title="水平等距分布" onclick="distributeElements('h')" data-tooltip="水平分布"><i class="far fa-arrows-left-right"></i></button>
+          <button class="toolbar-btn" id="distributeVBtn" title="垂直等距分布" onclick="distributeElements('v')" data-tooltip="垂直分布"><i class="far fa-arrows-up-down"></i></button>
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" title="上移一层" onclick="moveLayer('up')"><i class="fas fa-arrow-up"></i></button>
-          <button class="toolbar-btn" title="下移一层" onclick="moveLayer('down')"><i class="fas fa-arrow-down"></i></button>
-          <button class="toolbar-btn" title="置顶" onclick="moveLayer('top')"><i class="fas fa-angles-up"></i></button>
-          <button class="toolbar-btn" title="置底" onclick="moveLayer('bottom')"><i class="fas fa-angles-down"></i></button>
+          <button class="toolbar-btn" title="上移一层" onclick="moveLayer('up')"><i class="far fa-arrow-up"></i></button>
+          <button class="toolbar-btn" title="下移一层" onclick="moveLayer('down')"><i class="far fa-arrow-down"></i></button>
+          <button class="toolbar-btn" title="置顶" onclick="moveLayer('top')"><i class="far fa-angles-up"></i></button>
+          <button class="toolbar-btn" title="置底" onclick="moveLayer('bottom')"><i class="far fa-angles-down"></i></button>
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="lockBtn" title="锁定/解锁" onclick="toggleLock()"><i class="fas fa-lock"></i></button>
-          <button class="toolbar-btn" id="duplicateBtn" title="复制元素 (Ctrl+D)" onclick="duplicateElement()"><i class="fas fa-clone"></i></button>
-          <button class="toolbar-btn" id="groupBtn" title="组合 (Ctrl+G)" onclick="groupElements()"><i class="fas fa-object-group"></i></button>
-          <button class="toolbar-btn" id="ungroupBtn" title="取消组合 (Ctrl+Shift+G)" onclick="ungroupElements()"><i class="fas fa-object-ungroup"></i></button>
+          <button class="toolbar-btn" id="lockBtn" title="锁定/解锁" onclick="toggleLock()"><i class="far fa-lock"></i></button>
+          <button class="toolbar-btn" id="duplicateBtn" title="复制元素 (Ctrl+D)" onclick="duplicateElement()"><i class="far fa-clone"></i></button>
+          <button class="toolbar-btn" id="groupBtn" title="组合 (Ctrl+G)" onclick="groupElements()"><i class="far fa-object-group"></i></button>
+          <button class="toolbar-btn" id="ungroupBtn" title="取消组合 (Ctrl+Shift+G)" onclick="ungroupElements()"><i class="far fa-object-ungroup"></i></button>
         </div>
         <div class="toolbar-group">
-          <button class="toolbar-btn" id="flipHBtn" title="水平翻转" onclick="flipElement('h')" data-tooltip="水平翻转"><i class="fas fa-arrows-left-right"></i></button>
-          <button class="toolbar-btn" id="flipVBtn" title="垂直翻转" onclick="flipElement('v')" data-tooltip="垂直翻转"><i class="fas fa-arrows-up-down"></i></button>
+          <button class="toolbar-btn" id="flipHBtn" title="水平翻转" onclick="flipElement('h')" data-tooltip="水平翻转"><i class="far fa-arrows-left-right"></i></button>
+          <button class="toolbar-btn" id="flipVBtn" title="垂直翻转" onclick="flipElement('v')" data-tooltip="垂直翻转"><i class="far fa-arrows-up-down"></i></button>
         </div>
         <div style="flex:1;"></div>
         <div class="toolbar-group zoom-control">
-          <button class="toolbar-btn" title="缩小" onclick="changeZoom(-0.1)"><i class="fas fa-search-minus"></i></button>
+          <button class="toolbar-btn" title="缩小" onclick="changeZoom(-0.1)"><i class="far fa-search-minus"></i></button>
           <span class="zoom-display" id="zoomDisplay" onclick="toggleZoomMenu(event)" title="点击选择缩放比例">100%</span>
-          <button class="toolbar-btn" title="放大" onclick="changeZoom(0.1)"><i class="fas fa-search-plus"></i></button>
-          <button class="toolbar-btn" title="适应窗口" onclick="fitToWindow()"><i class="fas fa-expand"></i></button>
+          <button class="toolbar-btn" title="放大" onclick="changeZoom(0.1)"><i class="far fa-search-plus"></i></button>
+          <button class="toolbar-btn" title="适应窗口" onclick="fitToWindow()"><i class="far fa-expand"></i></button>
           <div class="zoom-menu" id="zoomMenu" style="display:none;">
             <div class="zoom-menu-item" onclick="setZoom(0.1)">10%</div>
             <div class="zoom-menu-item" onclick="setZoom(0.25)">25%</div>
@@ -1951,11 +1951,11 @@
             <div class="zoom-menu-item" onclick="setZoom(1.5)">150%</div>
             <div class="zoom-menu-item" onclick="setZoom(2)">200%</div>
             <div class="zoom-menu-sep"></div>
-            <div class="zoom-menu-item" onclick="fitToWindow();toggleZoomMenu();"><i class="fas fa-expand"></i> 适应窗口</div>
+            <div class="zoom-menu-item" onclick="fitToWindow();toggleZoomMenu();"><i class="far fa-expand"></i> 适应窗口</div>
           </div>
         </div>
         <div class="toolbar-group" id="bgToggleGroup" style="display:none;">
-          <button class="toolbar-btn active" id="bgToggleBtn" title="显示/隐藏底图（导入的 PDF 原版面）" onclick="toggleBg()"><i class="fas fa-image"></i></button>
+          <button class="toolbar-btn active" id="bgToggleBtn" title="显示/隐藏底图（导入的 PDF 原版面）" onclick="toggleBg()"><i class="far fa-image"></i></button>
         </div>
       </div>
 
@@ -1967,7 +1967,7 @@
         <div class="canvas-wrapper" id="canvasWrapper">
           <div class="canvas-page" id="canvasPage" style="width:595px;height:842px;">
           <div class="canvas-empty" id="canvasEmpty">
-            <i class="fas fa-mouse-pointer"></i>
+            <i class="far fa-mouse-pointer"></i>
             <p>拖拽组件到此处开始创建说明书</p>
           </div>
           <div class="smart-guide-temp h" id="guideH1" style="display:none;"></div>
@@ -1980,13 +1980,13 @@
     <!-- ===== Page Preview Panel (Floating Right) ===== -->
     <aside class="page-preview-panel" id="pagePreviewPanel">
       <div class="pp-header">
-        <span><i class="fas fa-layer-group" style="margin-right:4px;color:var(--accent);"></i> 页面预览<span class="pp-count" id="ppPageCount">1</span></span>
-        <i class="fas fa-chevron-left pp-toggle" id="ppToggle" title="收起面板" onclick="togglePagePreviewPanel()"></i>
+        <span><i class="far fa-layer-group" style="margin-right:4px;color:var(--accent);"></i> 页面预览<span class="pp-count" id="ppPageCount">1</span></span>
+        <i class="far fa-chevron-left pp-toggle" id="ppToggle" title="收起面板" onclick="togglePagePreviewPanel()"></i>
       </div>
       <div class="pp-section-title">页面列表</div>
       <div class="pp-actions">
-        <button class="pp-btn primary" onclick="addPage()"><i class="fas fa-plus"></i> 新建页面</button>
-        <button class="pp-btn" onclick="generateTOC()"><i class="fas fa-list"></i> 生成目录</button>
+        <button class="pp-btn primary" onclick="addPage()"><i class="far fa-plus"></i> 新建页面</button>
+        <button class="pp-btn" onclick="generateTOC()"><i class="far fa-list"></i> 生成目录</button>
       </div>
       <div class="pages-list" id="pagesList"></div>
       <div class="pp-layers-divider"></div>
@@ -1998,22 +1998,22 @@
 
     <!-- Reopen tab shown when the page-preview panel is collapsed -->
     <div class="pp-reopen-tab" id="ppReopenTab" title="展开页面预览面板" onclick="togglePagePreviewPanel()">
-      <i class="fas fa-chevron-left"></i>
+      <i class="far fa-chevron-left"></i>
       <span class="pp-reopen-label">页面</span>
     </div>
 
     <!-- ===== Right Panel ===== -->
     <aside class="props-panel">
       <div class="panel-tabs">
-        <div class="panel-tab active" data-ptab="props" onclick="switchPanelTab('props')"><i class="fas fa-sliders"></i> 属性</div>
-        <div class="panel-tab" data-ptab="lang" onclick="switchPanelTab('lang')"><i class="fas fa-language"></i> 多语言</div>
-        <div class="panel-tab" data-ptab="history" onclick="switchPanelTab('history')"><i class="fas fa-history"></i> 历史</div>
+        <div class="panel-tab active" data-ptab="props" onclick="switchPanelTab('props')"><i class="far fa-sliders"></i> 属性</div>
+        <div class="panel-tab" data-ptab="lang" onclick="switchPanelTab('lang')"><i class="far fa-language"></i> 多语言</div>
+        <div class="panel-tab" data-ptab="history" onclick="switchPanelTab('history')"><i class="far fa-history"></i> 历史</div>
       </div>
       <div class="panel-body" id="panelBody">
         <!-- Properties Tab -->
         <div id="ptab-props">
           <div class="no-selection" id="noSelection">
-            <i class="fas fa-hand-pointer"></i>
+            <i class="far fa-hand-pointer"></i>
             <p>选择一个组件<br>查看和编辑其属性</p>
           </div>
           <div class="multi-selection-info" id="multiSelectionInfo" style="display:none;">
@@ -2022,18 +2022,18 @@
             <div style="margin-top:16px;">
               <div class="panel-label">对齐与分布</div>
               <div class="panel-row" style="flex-wrap:wrap;">
-                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('left')"><i class="fas fa-align-left"></i>左对齐</div>
-                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('centerH')"><i class="fas fa-grip-lines"></i>水平居中</div>
-                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('right')"><i class="fas fa-align-right"></i>右对齐</div>
-                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('top')"><i class="fas fa-grip-lines-vertical"></i>顶对齐</div>
-                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('middle')"><i class="fas fa-equals"></i>垂直居中</div>
-                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('bottom')"><i class="fas fa-grip-lines-vertical fa-rotate-90"></i>底对齐</div>
-                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="distributeElements('h')"><i class="fas fa-arrows-left-right"></i>水平分布</div>
-                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="distributeElements('v')"><i class="fas fa-arrows-up-down"></i>垂直分布</div>
+                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('left')"><i class="far fa-align-left"></i>左对齐</div>
+                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('centerH')"><i class="far fa-grip-lines"></i>水平居中</div>
+                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('right')"><i class="far fa-align-right"></i>右对齐</div>
+                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('top')"><i class="far fa-grip-lines-vertical"></i>顶对齐</div>
+                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('middle')"><i class="far fa-equals"></i>垂直居中</div>
+                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="alignElements('bottom')"><i class="far fa-grip-lines-vertical fa-rotate-90"></i>底对齐</div>
+                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="distributeElements('h')"><i class="far fa-arrows-left-right"></i>水平分布</div>
+                <div class="panel-btn" style="width:calc(50% - 3px);" onclick="distributeElements('v')"><i class="far fa-arrows-up-down"></i>垂直分布</div>
               </div>
               <div class="panel-row" style="margin-top:8px;">
-                <div class="panel-btn" onclick="groupElements()" style="flex:1;"><i class="fas fa-object-group"></i>组合</div>
-                <div class="panel-btn" onclick="deleteSelected()" style="flex:1;color:var(--danger);"><i class="fas fa-trash"></i>删除</div>
+                <div class="panel-btn" onclick="groupElements()" style="flex:1;"><i class="far fa-object-group"></i>组合</div>
+                <div class="panel-btn" onclick="deleteSelected()" style="flex:1;color:var(--danger);"><i class="far fa-trash"></i>删除</div>
               </div>
             </div>
           </div>
@@ -2108,15 +2108,15 @@
                 </select>
               </div>
               <div class="panel-row">
-                <div class="panel-btn" id="propBold" onclick="toggleStyle('fontWeight','bold','normal')"><i class="fas fa-bold"></i>加粗</div>
-                <div class="panel-btn" id="propItalic" onclick="toggleStyle('fontStyle','italic','normal')"><i class="fas fa-italic"></i>斜体</div>
-                <div class="panel-btn" id="propUnderline" onclick="toggleStyle('textDecoration','underline','none')"><i class="fas fa-underline"></i>下划</div>
+                <div class="panel-btn" id="propBold" onclick="toggleStyle('fontWeight','bold','normal')"><i class="far fa-bold"></i>加粗</div>
+                <div class="panel-btn" id="propItalic" onclick="toggleStyle('fontStyle','italic','normal')"><i class="far fa-italic"></i>斜体</div>
+                <div class="panel-btn" id="propUnderline" onclick="toggleStyle('textDecoration','underline','none')"><i class="far fa-underline"></i>下划</div>
               </div>
               <div class="panel-row">
-                <div class="panel-btn" onclick="applyStyle('textAlign','left')"><i class="fas fa-align-left"></i>左</div>
-                <div class="panel-btn" onclick="applyStyle('textAlign','center')"><i class="fas fa-align-center"></i>中</div>
-                <div class="panel-btn" onclick="applyStyle('textAlign','right')"><i class="fas fa-align-right"></i>右</div>
-                <div class="panel-btn" onclick="applyStyle('textAlign','justify')"><i class="fas fa-align-justify"></i>两</div>
+                <div class="panel-btn" onclick="applyStyle('textAlign','left')"><i class="far fa-align-left"></i>左</div>
+                <div class="panel-btn" onclick="applyStyle('textAlign','center')"><i class="far fa-align-center"></i>中</div>
+                <div class="panel-btn" onclick="applyStyle('textAlign','right')"><i class="far fa-align-right"></i>右</div>
+                <div class="panel-btn" onclick="applyStyle('textAlign','justify')"><i class="far fa-align-justify"></i>两</div>
               </div>
             </div>
             <div class="panel-section">
@@ -2182,12 +2182,12 @@
             <div class="panel-section" id="tablePropsSection" style="display:none;">
               <div class="panel-label">表格操作</div>
               <div class="panel-row">
-                <div class="panel-btn" onclick="tableAddRow()" style="flex:1;"><i class="fas fa-plus"></i>添加行</div>
-                <div class="panel-btn" onclick="tableDelRow()" style="flex:1;"><i class="fas fa-minus"></i>删除行</div>
+                <div class="panel-btn" onclick="tableAddRow()" style="flex:1;"><i class="far fa-plus"></i>添加行</div>
+                <div class="panel-btn" onclick="tableDelRow()" style="flex:1;"><i class="far fa-minus"></i>删除行</div>
               </div>
               <div class="panel-row">
-                <div class="panel-btn" onclick="tableAddCol()" style="flex:1;"><i class="fas fa-plus"></i>添加列</div>
-                <div class="panel-btn" onclick="tableDelCol()" style="flex:1;"><i class="fas fa-minus"></i>删除列</div>
+                <div class="panel-btn" onclick="tableAddCol()" style="flex:1;"><i class="far fa-plus"></i>添加列</div>
+                <div class="panel-btn" onclick="tableDelCol()" style="flex:1;"><i class="far fa-minus"></i>删除列</div>
               </div>
             </div>
             <div class="panel-section" id="contentPropsSection" style="display:none;">
@@ -2197,8 +2197,8 @@
             <div class="panel-section">
               <div class="panel-label">翻转</div>
               <div class="panel-row">
-                <div class="panel-btn" onclick="flipElement('h')" style="flex:1;"><i class="fas fa-arrows-left-right"></i>水平翻转</div>
-                <div class="panel-btn" onclick="flipElement('v')" style="flex:1;"><i class="fas fa-arrows-up-down"></i>垂直翻转</div>
+                <div class="panel-btn" onclick="flipElement('h')" style="flex:1;"><i class="far fa-arrows-left-right"></i>水平翻转</div>
+                <div class="panel-btn" onclick="flipElement('v')" style="flex:1;"><i class="far fa-arrows-up-down"></i>垂直翻转</div>
               </div>
             </div>
             <div class="panel-section">
@@ -2218,9 +2218,9 @@
             <div class="panel-section">
               <div class="panel-label">操作</div>
               <div class="panel-row">
-                <div class="panel-btn" onclick="toggleLock()"><i class="fas fa-lock"></i>锁定</div>
-                <div class="panel-btn" onclick="duplicateElement()"><i class="fas fa-clone"></i>复制</div>
-                <div class="panel-btn" onclick="deleteSelected()" style="color:var(--danger);"><i class="fas fa-trash"></i>删除</div>
+                <div class="panel-btn" onclick="toggleLock()"><i class="far fa-lock"></i>锁定</div>
+                <div class="panel-btn" onclick="duplicateElement()"><i class="far fa-clone"></i>复制</div>
+                <div class="panel-btn" onclick="deleteSelected()" style="color:var(--danger);"><i class="far fa-trash"></i>删除</div>
               </div>
             </div>
           </div>
@@ -2234,7 +2234,7 @@
           </div>
           <div class="panel-section">
             <button class="btn btn-outline btn-sm" style="width:100%;" onclick="addLanguage()">
-              <i class="fas fa-plus"></i> 添加语言版本
+              <i class="far fa-plus"></i> 添加语言版本
             </button>
           </div>
           <div class="panel-section">
@@ -2251,16 +2251,16 @@
               </div>
             </div>
             <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="showToast('术语库管理功能', 'info')">
-              <i class="fas fa-book"></i> 管理术语库
+              <i class="far fa-book"></i> 管理术语库
             </button>
           </div>
           <div class="panel-section">
             <div class="panel-label">翻译操作</div>
             <div class="panel-btn-row">
-              <div class="panel-btn" onclick="translateAll()" style="flex:1;"><i class="fas fa-language"></i> 一键翻译</div>
+              <div class="panel-btn" onclick="translateAll()" style="flex:1;"><i class="far fa-language"></i> 一键翻译</div>
             </div>
             <div class="panel-btn-row" style="margin-top:6px;">
-              <div class="panel-btn" onclick="syncLanguages()" style="flex:1;"><i class="fas fa-sync"></i> 同步变更</div>
+              <div class="panel-btn" onclick="syncLanguages()" style="flex:1;"><i class="far fa-sync"></i> 同步变更</div>
             </div>
           </div>
         </div>
@@ -2277,7 +2277,7 @@
             <div class="panel-label">版本管理</div>
             <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;">
               <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-light);">
-                <span><i class="fas fa-circle" style="color:var(--success);font-size:8px;"></i> 当前版本</span>
+                <span><i class="far fa-circle" style="color:var(--success);font-size:8px;"></i> 当前版本</span>
                 <span style="color:var(--text-muted);">v2.3</span>
               </div>
               <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-light);">
@@ -2294,7 +2294,7 @@
               </div>
             </div>
             <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="showToast('已创建新版本快照', 'success')">
-              <i class="fas fa-camera"></i> 创建版本快照
+              <i class="far fa-camera"></i> 创建版本快照
             </button>
           </div>
         </div>
@@ -2305,24 +2305,24 @@
   <!-- ===== Footer ===== -->
   <footer class="footer">
     <div class="footer-item" onclick="resetZoom()">
-      <i class="fas fa-search"></i>
+      <i class="far fa-search"></i>
       <span id="footerZoom">缩放: 100%</span>
     </div>
     <div class="footer-item">
-      <i class="fas fa-file"></i>
+      <i class="far fa-file"></i>
       <span id="footerPage">页面: 1 / 1</span>
     </div>
     <div class="footer-item" id="footerLang">
-      <i class="fas fa-language"></i>
+      <i class="far fa-language"></i>
       <span>语言: 中文</span>
     </div>
     <div class="footer-item">
-      <i class="fas fa-th"></i>
+      <i class="far fa-th"></i>
       <span id="footerElements">元素: 0</span>
     </div>
     <div style="flex:1;"></div>
     <div class="footer-item" id="footerSelection" style="display:none;">
-      <i class="fas fa-vector-square"></i>
+      <i class="far fa-vector-square"></i>
       <span id="footerSelectionText">选中: 1</span>
     </div>
     <div class="footer-item">
@@ -2330,7 +2330,7 @@
       <span id="saveStatus">已保存</span>
     </div>
     <div class="footer-item">
-      <i class="fas fa-users"></i>
+      <i class="far fa-users"></i>
       <span>1 人在线</span>
     </div>
   </footer>
@@ -2338,28 +2338,28 @@
 
 <!-- ===== Context Menu ===== -->
 <div class="context-menu" id="contextMenu">
-  <div class="ctx-item" onclick="copyElement();hideContextMenu()"><i class="fas fa-copy fa-fw"></i> 复制 <span class="shortcut">Ctrl+C</span></div>
-  <div class="ctx-item" onclick="cutElement();hideContextMenu()"><i class="fas fa-cut fa-fw"></i> 剪切 <span class="shortcut">Ctrl+X</span></div>
-  <div class="ctx-item" onclick="pasteElement();hideContextMenu()"><i class="fas fa-paste fa-fw"></i> 粘贴 <span class="shortcut">Ctrl+V</span></div>
-  <div class="ctx-item" onclick="duplicateElement();hideContextMenu()"><i class="fas fa-clone fa-fw"></i> 克隆 <span class="shortcut">Ctrl+D</span></div>
+  <div class="ctx-item" onclick="copyElement();hideContextMenu()"><i class="far fa-copy fa-fw"></i> 复制 <span class="shortcut">Ctrl+C</span></div>
+  <div class="ctx-item" onclick="cutElement();hideContextMenu()"><i class="far fa-cut fa-fw"></i> 剪切 <span class="shortcut">Ctrl+X</span></div>
+  <div class="ctx-item" onclick="pasteElement();hideContextMenu()"><i class="far fa-paste fa-fw"></i> 粘贴 <span class="shortcut">Ctrl+V</span></div>
+  <div class="ctx-item" onclick="duplicateElement();hideContextMenu()"><i class="far fa-clone fa-fw"></i> 克隆 <span class="shortcut">Ctrl+D</span></div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item" onclick="copyStyle();hideContextMenu()"><i class="fas fa-paint-brush fa-fw"></i> 复制样式 <span class="shortcut">Ctrl+Shift+C</span></div>
-  <div class="ctx-item" onclick="pasteStyle();hideContextMenu()"><i class="fas fa-brush fa-fw"></i> 粘贴样式 <span class="shortcut">Ctrl+Shift+V</span></div>
+  <div class="ctx-item" onclick="copyStyle();hideContextMenu()"><i class="far fa-paint-brush fa-fw"></i> 复制样式 <span class="shortcut">Ctrl+Shift+C</span></div>
+  <div class="ctx-item" onclick="pasteStyle();hideContextMenu()"><i class="far fa-brush fa-fw"></i> 粘贴样式 <span class="shortcut">Ctrl+Shift+V</span></div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item" onclick="moveLayer('up');hideContextMenu()"><i class="fas fa-arrow-up fa-fw"></i> 上移一层</div>
-  <div class="ctx-item" onclick="moveLayer('down');hideContextMenu()"><i class="fas fa-arrow-down fa-fw"></i> 下移一层</div>
-  <div class="ctx-item" onclick="moveLayer('top');hideContextMenu()"><i class="fas fa-angles-up fa-fw"></i> 置于顶层</div>
-  <div class="ctx-item" onclick="moveLayer('bottom');hideContextMenu()"><i class="fas fa-angles-down fa-fw"></i> 置于底层</div>
+  <div class="ctx-item" onclick="moveLayer('up');hideContextMenu()"><i class="far fa-arrow-up fa-fw"></i> 上移一层</div>
+  <div class="ctx-item" onclick="moveLayer('down');hideContextMenu()"><i class="far fa-arrow-down fa-fw"></i> 下移一层</div>
+  <div class="ctx-item" onclick="moveLayer('top');hideContextMenu()"><i class="far fa-angles-up fa-fw"></i> 置于顶层</div>
+  <div class="ctx-item" onclick="moveLayer('bottom');hideContextMenu()"><i class="far fa-angles-down fa-fw"></i> 置于底层</div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item" onclick="flipElement('h');hideContextMenu()"><i class="fas fa-arrows-left-right fa-fw"></i> 水平翻转</div>
-  <div class="ctx-item" onclick="flipElement('v');hideContextMenu()"><i class="fas fa-arrows-up-down fa-fw"></i> 垂直翻转</div>
+  <div class="ctx-item" onclick="flipElement('h');hideContextMenu()"><i class="far fa-arrows-left-right fa-fw"></i> 水平翻转</div>
+  <div class="ctx-item" onclick="flipElement('v');hideContextMenu()"><i class="far fa-arrows-up-down fa-fw"></i> 垂直翻转</div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item" onclick="groupElements();hideContextMenu()"><i class="fas fa-object-group fa-fw"></i> 组合 <span class="shortcut">Ctrl+G</span></div>
-  <div class="ctx-item" onclick="ungroupElements();hideContextMenu()"><i class="fas fa-object-ungroup fa-fw"></i> 取消组合</div>
+  <div class="ctx-item" onclick="groupElements();hideContextMenu()"><i class="far fa-object-group fa-fw"></i> 组合 <span class="shortcut">Ctrl+G</span></div>
+  <div class="ctx-item" onclick="ungroupElements();hideContextMenu()"><i class="far fa-object-ungroup fa-fw"></i> 取消组合</div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item" onclick="toggleLock();hideContextMenu()"><i class="fas fa-lock fa-fw"></i> 锁定/解锁</div>
+  <div class="ctx-item" onclick="toggleLock();hideContextMenu()"><i class="far fa-lock fa-fw"></i> 锁定/解锁</div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item danger" onclick="deleteSelected();hideContextMenu()"><i class="fas fa-trash fa-fw"></i> 删除 <span class="shortcut">Delete</span></div>
+  <div class="ctx-item danger" onclick="deleteSelected();hideContextMenu()"><i class="far fa-trash fa-fw"></i> 删除 <span class="shortcut">Delete</span></div>
 </div>
 
 <!-- ===== Export Modal ===== -->
@@ -2367,47 +2367,47 @@
   <div class="modal" style="width:560px;">
     <div class="modal-header">
       <span class="modal-title">导出文档</span>
-      <button class="modal-close" onclick="closeModal('exportModal')"><i class="fas fa-times"></i></button>
+      <button class="modal-close" onclick="closeModal('exportModal')"><i class="far fa-times"></i></button>
     </div>
       <div class="modal-body">
         <div class="export-grid">
           <div class="export-card selected" data-format="pdf" onclick="selectExportFormat(this)">
-            <i class="fas fa-file-pdf" style="color:#e74c3c;"></i>
+            <i class="far fa-file-pdf" style="color:#e74c3c;"></i>
             <div class="ex-name">PDF</div>
             <div class="ex-desc">可编辑矢量</div>
           </div>
           <div class="export-card" data-format="svg" onclick="selectExportFormat(this)">
-            <i class="fas fa-bezier-curve" style="color:#0ea5e9;"></i>
+            <i class="far fa-bezier-curve" style="color:#0ea5e9;"></i>
             <div class="ex-name">SVG</div>
             <div class="ex-desc">矢量（AI 首选）</div>
           </div>
           <div class="export-card" data-format="ai" onclick="selectExportFormat(this)">
-            <i class="fas fa-palette" style="color:#ff7a00;"></i>
+            <i class="far fa-palette" style="color:#ff7a00;"></i>
             <div class="ex-name">AI</div>
             <div class="ex-desc">Illustrator 原生</div>
           </div>
           <div class="export-card" data-format="word" onclick="selectExportFormat(this)">
-            <i class="fas fa-file-word" style="color:#2b579a;"></i>
+            <i class="far fa-file-word" style="color:#2b579a;"></i>
             <div class="ex-name">Word</div>
             <div class="ex-desc">可继续编辑</div>
           </div>
           <div class="export-card" data-format="excel" onclick="selectExportFormat(this)">
-            <i class="fas fa-file-excel" style="color:#217346;"></i>
+            <i class="far fa-file-excel" style="color:#217346;"></i>
             <div class="ex-name">Excel</div>
             <div class="ex-desc">表格数据</div>
           </div>
           <div class="export-card" data-format="ppt" onclick="selectExportFormat(this)">
-            <i class="fas fa-file-powerpoint" style="color:#d24726;"></i>
+            <i class="far fa-file-powerpoint" style="color:#d24726;"></i>
             <div class="ex-name">PPT</div>
             <div class="ex-desc">演示文稿</div>
           </div>
           <div class="export-card" data-format="html" onclick="selectExportFormat(this)">
-            <i class="fas fa-file-code" style="color:#e44d26;"></i>
+            <i class="far fa-file-code" style="color:#e44d26;"></i>
             <div class="ex-name">HTML</div>
             <div class="ex-desc">网页格式</div>
           </div>
           <div class="export-card" data-format="image" onclick="selectExportFormat(this)">
-            <i class="fas fa-images" style="color:#8e44ad;"></i>
+            <i class="far fa-images" style="color:#8e44ad;"></i>
             <div class="ex-name">图片</div>
             <div class="ex-desc">PNG</div>
           </div>
@@ -2431,14 +2431,14 @@
             </label>
           </div>
           <div id="expPathHint" style="margin-top:10px;font-size:12px;color:var(--text-muted);line-height:1.5;display:none;">
-            <i class="fas fa-folder-open" style="color:var(--accent);"></i>
+            <i class="far fa-folder-open" style="color:var(--accent);"></i>
             点击「确认导出」后，请在弹出的系统对话框中<b>选择保存路径与文件名</b>。若浏览器不支持（如 Safari/Firefox 或非 HTTPS 环境），将自动下载到默认文件夹。
           </div>
         </div>
       </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('exportModal')">取消</button>
-      <button class="btn btn-primary" onclick="confirmExport()"><i class="fas fa-download"></i> 确认导出</button>
+      <button class="btn btn-primary" onclick="confirmExport()"><i class="far fa-download"></i> 确认导出</button>
     </div>
   </div>
 </div>
@@ -2448,7 +2448,7 @@
   <div class="modal" style="width:440px;">
     <div class="modal-body" style="text-align:center;padding:38px 32px 26px;">
       <div id="exportDoneIconWrap" style="width:66px;height:66px;border-radius:50%;background:#e8f8f0;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
-        <i class="fas fa-check" style="font-size:30px;color:#27ae60;"></i>
+        <i class="far fa-check" style="font-size:30px;color:#27ae60;"></i>
       </div>
       <div id="exportDoneTitle" style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:10px;">导出完成</div>
       <div id="exportDoneMsg" style="font-size:14px;color:var(--text-secondary);line-height:1.7;word-break:break-all;"></div>
@@ -2475,11 +2475,11 @@
   <div class="modal" style="width:520px;">
     <div class="modal-header">
       <span class="modal-title">导入文档</span>
-      <button class="modal-close" onclick="closeModal('importModal')"><i class="fas fa-times"></i></button>
+      <button class="modal-close" onclick="closeModal('importModal')"><i class="far fa-times"></i></button>
     </div>
     <div class="modal-body">
       <div class="import-area" onclick="document.getElementById('fileInput').click()">
-        <i class="fas fa-cloud-upload-alt"></i>
+        <i class="far fa-cloud-upload"></i>
         <p>点击或拖拽 PDF 文件到此处上传</p>
         <p class="hint">安规说明书（PDF）将被解析为可编辑的文字与底图</p>
         <div class="import-formats">
@@ -2504,7 +2504,7 @@
         <button type="button" class="btn btn-outline btn-sm" onclick="openAiConfig()">配置大模型</button>
       </div>
       <div style="margin-top:16px;padding:12px;background:var(--bg-secondary);border-radius:8px;font-size:12px;color:var(--text-secondary);line-height:1.6;">
-        <i class="fas fa-info-circle" style="color:var(--accent);"></i>
+        <i class="far fa-circle-info" style="color:var(--accent);"></i>
         导入后系统会提取每一页的文字（逐字可编辑）并保留原版面作为底图参考。如果某页是扫描图片（无文字层），将仅导入底图，您可在其上添加文字。
       </div>
     </div>
@@ -2519,7 +2519,7 @@
   <div class="modal" style="width:540px;">
     <div class="modal-header">
       <span class="modal-title">AI 大模型配置（视觉识别）</span>
-      <button class="modal-close" onclick="closeModal('aiConfigModal')"><i class="fas fa-times"></i></button>
+      <button class="modal-close" onclick="closeModal('aiConfigModal')"><i class="far fa-times"></i></button>
     </div>
     <div class="modal-body">
       <div class="np-field" style="margin-bottom:14px;">
@@ -2533,7 +2533,7 @@
       <!-- 系统默认：Base / 模型已预置，仅 Key 需填写 -->
       <div id="aiDefaultInfo" style="margin-bottom:14px;padding:12px 14px;background:linear-gradient(135deg,#f5f3ff,#eef2ff);border:1px solid #ddd6fe;border-radius:10px;">
         <div style="font-size:13px;font-weight:600;color:#6d28d;margin-bottom:6px;">
-          <i class="fas fa-robot" style="color:#7c3aed;"></i> 系统默认 · 通义千问 qwen-vl-max
+          <i class="far fa-robot" style="color:#7c3aed;"></i> 系统默认 · 通义千问 qwen-vl-max
         </div>
         <div style="font-size:12px;color:#4b5563;line-height:1.7;">
           API Base：<code style="background:#fff;padding:1px 6px;border-radius:4px;border:1px solid #e5e7eb;">https://dashscope.aliyuncs.com/compatible-mode/v1</code><br>
@@ -2569,7 +2569,7 @@
       </div>
 
       <div style="padding:10px 12px;background:var(--bg-secondary);border-radius:8px;font-size:11px;color:var(--text-secondary);line-height:1.6;">
-        <i class="fas fa-shield-alt" style="color:#7c3aed;"></i>
+        <i class="far fa-shield" style="color:#7c3aed;"></i>
         密钥仅保存在本地浏览器（localStorage），不会上传到您填写的接口以外的任何地方。未配置或网络失败时，导入会自动降级为普通 PDF.js 解析（仅对含文字层的 PDF 可编辑）。
       </div>
     </div>
@@ -2585,32 +2585,32 @@
   <div class="modal" style="width:640px;">
     <div class="modal-header">
       <span class="modal-title">选择模板</span>
-      <button class="modal-close" onclick="closeModal('templateModal')"><i class="fas fa-times"></i></button>
+      <button class="modal-close" onclick="closeModal('templateModal')"><i class="far fa-times"></i></button>
     </div>
     <div class="modal-body">
       <div class="template-grid">
         <div class="template-card" onclick="applyTemplate('product-manual', '产品说明书')">
-          <div class="tpl-preview"><i class="fas fa-file-alt"></i></div>
+          <div class="tpl-preview"><i class="far fa-file-alt"></i></div>
           <div class="tpl-info"><div class="tpl-name">产品说明书</div><div class="tpl-desc">封面+目录+章节+参数表</div></div>
         </div>
         <div class="template-card" onclick="applyTemplate('tech-manual', '技术手册')">
-          <div class="tpl-preview"><i class="fas fa-laptop"></i></div>
+          <div class="tpl-preview"><i class="far fa-laptop"></i></div>
           <div class="tpl-info"><div class="tpl-name">技术手册</div><div class="tpl-desc">技术参数+安装指南</div></div>
         </div>
         <div class="template-card" onclick="applyTemplate('electronics', '电子产品说明书')">
-          <div class="tpl-preview"><i class="fas fa-microchip"></i></div>
+          <div class="tpl-preview"><i class="far fa-microchip"></i></div>
           <div class="tpl-info"><div class="tpl-name">电子产品说明书</div><div class="tpl-desc">安全须知+操作说明</div></div>
         </div>
         <div class="template-card" onclick="applyTemplate('medical', '医疗器械手册')">
-          <div class="tpl-preview"><i class="fas fa-heartbeat"></i></div>
+          <div class="tpl-preview"><i class="far fa-heartbeat"></i></div>
           <div class="tpl-info"><div class="tpl-name">医疗器械手册</div><div class="tpl-desc">合规要求+使用规范</div></div>
         </div>
         <div class="template-card" onclick="applyTemplate('user-guide', '用户指南')">
-          <div class="tpl-preview"><i class="fas fa-book"></i></div>
+          <div class="tpl-preview"><i class="far fa-book"></i></div>
           <div class="tpl-info"><div class="tpl-name">用户指南</div><div class="tpl-desc">入门+功能+FAQ</div></div>
         </div>
         <div class="template-card" onclick="applyTemplate('blank', '空白文档')">
-          <div class="tpl-preview"><i class="fas fa-file"></i></div>
+          <div class="tpl-preview"><i class="far fa-file"></i></div>
           <div class="tpl-info"><div class="tpl-name">空白文档</div><div class="tpl-desc">从零开始创建</div></div>
         </div>
       </div>
@@ -2624,18 +2624,18 @@
 <!-- ===== Preview Overlay ===== -->
 <div class="preview-overlay" id="previewOverlay">
   <div class="preview-header">
-    <div class="pv-title"><i class="fas fa-eye"></i> 预览模式 - 产品说明书</div>
+    <div class="pv-title"><i class="far fa-eye"></i> 预览模式 - 产品说明书</div>
     <div style="display:flex;gap:8px;align-items:center;">
       <div style="display:flex;gap:4px;align-items:center;padding:2px 6px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-primary);">
-        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="changePreviewZoom(-0.1)" title="缩小"><i class="fas fa-search-minus"></i></button>
+        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="changePreviewZoom(-0.1)" title="缩小"><i class="far fa-search-minus"></i></button>
         <span style="line-height:28px;font-size:13px;min-width:50px;text-align:center;cursor:pointer;" id="previewZoomDisplay" onclick="setPreviewZoom(1)" title="点击恢复 100%">100%</span>
-        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="changePreviewZoom(0.1)" title="放大"><i class="fas fa-search-plus"></i></button>
-        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="fitPreview()" title="适应窗口"><i class="fas fa-expand"></i></button>
+        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="changePreviewZoom(0.1)" title="放大"><i class="far fa-search-plus"></i></button>
+        <button class="btn btn-outline btn-sm" style="padding:2px 7px;" onclick="fitPreview()" title="适应窗口"><i class="far fa-expand"></i></button>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="changePreviewPage(-1)"><i class="fas fa-chevron-left"></i> 上一页</button>
+      <button class="btn btn-outline btn-sm" onclick="changePreviewPage(-1)"><i class="far fa-chevron-left"></i> 上一页</button>
       <span style="line-height:30px;font-size:13px;" id="previewPageNum">1 / 1</span>
-      <button class="btn btn-outline btn-sm" onclick="changePreviewPage(1)">下一页 <i class="fas fa-chevron-right"></i></button>
-      <button class="btn btn-primary btn-sm" onclick="togglePreview()"><i class="fas fa-times"></i> 退出预览</button>
+      <button class="btn btn-outline btn-sm" onclick="changePreviewPage(1)">下一页 <i class="far fa-chevron-right"></i></button>
+      <button class="btn btn-primary btn-sm" onclick="togglePreview()"><i class="far fa-times"></i> 退出预览</button>
     </div>
   </div>
   <div class="preview-body" id="previewBody"></div>
@@ -2645,8 +2645,8 @@
 <div class="modal-overlay" id="draftsModal">
   <div class="modal" style="width:520px;">
     <div class="modal-header">
-      <span class="modal-title"><i class="fas fa-box-archive" style="margin-right:6px;color:var(--accent);"></i>草稿箱</span>
-      <button class="modal-close" onclick="closeModal('draftsModal')"><i class="fas fa-times"></i></button>
+      <span class="modal-title"><i class="far fa-box-archive" style="margin-right:6px;color:var(--accent);"></i>草稿箱</span>
+      <button class="modal-close" onclick="closeModal('draftsModal')"><i class="far fa-times"></i></button>
     </div>
     <div class="modal-body">
       <div class="drafts-list" id="draftsList"></div>
@@ -2663,7 +2663,7 @@
   <div class="table-picker-popup" id="tablePickerPopup">
     <!-- 标题栏 -->
     <div class="tp-header">
-      <i class="fas fa-table" style="font-size:18px;color:#6366f1;"></i>
+      <i class="far fa-table" style="font-size:18px;color:#6366f1;"></i>
       <span id="tpLabel">3 行 3 列 表格</span>
     </div>
     <!-- 可视化网格选择区 -->
@@ -2764,7 +2764,7 @@ function showToast(msg, type = 'info', duration = 2500) {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   const icons = { success: 'check-circle', error: 'times-circle', info: 'info-circle', warning: 'exclamation-triangle' };
-  toast.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i><span>${msg}</span>`;
+  toast.innerHTML = `<i class="far fa-${icons[type] || 'info-circle'}"></i><span>${msg}</span>`;
   container.appendChild(toast);
   setTimeout(() => {
     toast.classList.add('fade-out');
@@ -2854,10 +2854,10 @@ function buildDropdown(menuKey) {
       html += '<div class="dropdown-divider"></div>';
     } else {
       const dangerClass = item.danger ? ' style="color:var(--danger);"' : '';
-      const checkIcon = item.toggle ? '<i class="fas fa-check fa-fw" style="opacity:' + (item.checked ? '1' : '0') + ';"></i>' : '';
+      const checkIcon = item.toggle ? '<i class="far fa-check fa-fw" style="opacity:' + (item.checked ? '1' : '0') + ';"></i>' : '';
       html += `<div class="dropdown-item"${dangerClass} onclick="handleMenuClick('${menuKey}', ${items.indexOf(item)})">
         <span style="display:flex;align-items:center;gap:8px;">
-          <i class="fas fa-${item.icon} fa-fw"></i> ${item.label}
+          <i class="far fa-${item.icon} fa-fw"></i> ${item.label}
         </span>
         <span style="display:flex;gap:8px;">
           ${item.shortcut ? '<span class="shortcut">' + item.shortcut + '</span>' : ''}
@@ -3452,7 +3452,7 @@ function renderElementContent(el) {
       if (el.props && el.props.src) {
         return `<div class="el-image"><img src="${el.props.src}" alt=""></div>`;
       }
-      return `<div class="el-image"><div class="img-placeholder" onclick="triggerImageUpload('${el.id}')"><i class="fas fa-image"></i><span>点击上传图片</span></div></div>`;
+      return `<div class="el-image"><div class="img-placeholder" onclick="triggerImageUpload('${el.id}')"><i class="far fa-image"></i><span>点击上传图片</span></div></div>`;
     case 'table':
       return renderTable(el);
     case 'shape':
@@ -3468,9 +3468,9 @@ function renderElementContent(el) {
     case 'heading':
       return `<div class="el-heading" ondblclick="startTextEdit('${el.id}')">${escapeHtml(el.content)}</div>`;
     case 'warning':
-      return `<div class="el-warning"><i class="fas fa-exclamation-triangle warn-icon" style="color:#f59e0b;"></i><div class="warn-content" ondblclick="startTextEdit('${el.id}')">${escapeHtml(el.content)}</div></div>`;
+      return `<div class="el-warning"><i class="far fa-triangle-exclamation warn-icon" style="color:#f59e0b;"></i><div class="warn-content" ondblclick="startTextEdit('${el.id}')">${escapeHtml(el.content)}</div></div>`;
     case 'note':
-      return `<div class="el-warning" style="border-color:#3b82f6;background:#e7f5ff;"><i class="fas fa-info-circle warn-icon" style="color:#3b82f6;"></i><div class="warn-content" ondblclick="startTextEdit('${el.id}')">${escapeHtml(el.content)}</div></div>`;
+      return `<div class="el-warning" style="border-color:#3b82f6;background:#e7f5ff;"><i class="far fa-circle-info warn-icon" style="color:#3b82f6;"></i><div class="warn-content" ondblclick="startTextEdit('${el.id}')">${escapeHtml(el.content)}</div></div>`;
     case 'steps':
       return renderSteps(el);
     // ===== 新增组件渲染 =====
@@ -3479,7 +3479,7 @@ function renderElementContent(el) {
     case 'icon': {
       const ic = el.props && el.props.icon ? el.props.icon : 'fa-gear';
       const sz = Math.max(8, Math.floor(Math.min(el.width, el.height) * 0.7));
-      return `<div class="el-icon" ondblclick="selectElement('${el.id}')"><i class="fas ${ic}" style="font-size:${sz}px;"></i></div>`;
+      return `<div class="el-icon" ondblclick="selectElement('${el.id}')"><i class="far ${ic}" style="font-size:${sz}px;"></i></div>`;
     }
     case 'qrcode':
       return renderQRCode(el);
@@ -3510,7 +3510,7 @@ function renderElementContent(el) {
     case 'packing-list':
       return renderPackingList(el);
     case 'danger':
-      return `<div class="el-warning el-danger"><i class="fas fa-radiation danger-icon" style="color:#dc2626;"></i><div class="warn-content" ondblclick="startTextEdit('${el.id}')">${escapeHtml(el.content)}</div></div>`;
+      return `<div class="el-warning el-danger"><i class="far fa-radiation danger-icon" style="color:#dc2626;"></i><div class="warn-content" ondblclick="startTextEdit('${el.id}')">${escapeHtml(el.content)}</div></div>`;
     case 'prohibition':
       return renderSign(el, 'prohibition');
     case 'mandatory':
@@ -3641,7 +3641,7 @@ function renderFigure(el) {
   const cap = escapeHtml(c.caption || '');
   const img = p.src
     ? `<img src="${p.src}" alt="">`
-    : `<div class="img-placeholder" onclick="triggerFigureUpload('${el.id}')"><i class="fas fa-image"></i><span>点击上传图片</span></div>`;
+    : `<div class="img-placeholder" onclick="triggerFigureUpload('${el.id}')"><i class="far fa-image"></i><span>点击上传图片</span></div>`;
   return `<div class="el-figure">
     <div class="fig-img">${img}</div>
     <div class="fig-cap" ondblclick="startTextEdit('${el.id}','caption','.fig-cap')">${cap}</div>
@@ -3712,7 +3712,7 @@ function renderFeatureCard(el) {
   const icon = p.icon || 'fa-star';
   const color = p.iconColor || '#6366f1';
   return `<div class="el-feature">
-    <div class="fc-icon" style="color:${color};background:${color}1a;"><i class="fas ${icon}"></i></div>
+    <div class="fc-icon" style="color:${color};background:${color}1a;"><i class="far ${icon}"></i></div>
     <div class="fc-title" ondblclick="startTextEdit('${el.id}','title','.fc-title')">${escapeHtml(c.title || '')}</div>
     <div class="fc-desc" ondblclick="startTextEdit('${el.id}','desc','.fc-desc')">${escapeHtml(c.desc || '')}</div>
   </div>`;
@@ -3723,7 +3723,7 @@ function renderPackingList(el) {
   const items = c.items || [];
   let rows = '';
   items.forEach((item, i) => {
-    rows += `<div class="pk-row"><i class="fas fa-check-circle"></i><span class="pk-text" style="cursor:text;" ondblclick="startListItemEdit('${el.id}','items',${i},'.pk-row:nth-of-type(${i + 1}) .pk-text')">${escapeHtml(item)}</span></div>`;
+    rows += `<div class="pk-row"><i class="far fa-check-circle"></i><span class="pk-text" style="cursor:text;" ondblclick="startListItemEdit('${el.id}','items',${i},'.pk-row:nth-of-type(${i + 1}) .pk-text')">${escapeHtml(item)}</span></div>`;
   });
   return `<div class="el-packing">
     <div class="pk-title" ondblclick="startTextEdit('${el.id}','title','.pk-title')">${escapeHtml(c.title || '')}</div>
@@ -3739,7 +3739,7 @@ function renderSign(el, kind) {
   const slash = kind === 'prohibition' ? '<div class="sign-slash"></div>' : '';
   return `<div class="el-sign">
     <div class="sign-badge" style="border-color:${ring};color:${kind === 'prohibition' ? '#111' : ring};">
-      <i class="fas ${icon}"></i>${slash}
+      <i class="far ${icon}"></i>${slash}
     </div>
     <div class="sign-label" ondblclick="startTextEdit('${el.id}','label','.sign-label')">${escapeHtml(c.label || '')}</div>
   </div>`;
@@ -4403,7 +4403,7 @@ function updateContentEditor(el) {
     const cur = (el.props && el.props.icon) || '';
     html += '<div class="icon-picker-grid">';
     ICON_LIBRARY.forEach(ic => {
-      html += `<div class="ip-item ${ic === cur ? 'active' : ''}" title="${ic}" onclick="setElementIcon('${ic}')"><i class="fas ${ic}"></i></div>`;
+      html += `<div class="ip-item ${ic === cur ? 'active' : ''}" title="${ic}" onclick="setElementIcon('${ic}')"><i class="far ${ic}"></i></div>`;
     });
     html += '</div>';
     if (el.type === 'icon' || el.type === 'feature-card') {
@@ -4423,11 +4423,11 @@ function updateContentEditor(el) {
     arr.forEach((it, i) => {
       html += `<div class="panel-row" style="gap:4px;">
         <input type="text" class="panel-input" style="flex:1;" value="${escapeAttr(it)}" oninput="setListItem(${i}, this.value)">
-        <div class="panel-btn" style="width:28px;flex:none;padding:0;" onclick="removeListItem(${i})" title="删除"><i class="fas fa-minus"></i></div>
+        <div class="panel-btn" style="width:28px;flex:none;padding:0;" onclick="removeListItem(${i})" title="删除"><i class="far fa-minus"></i></div>
       </div>`;
     });
     html += '</div>';
-    html += `<div class="panel-btn" style="margin-top:6px;" onclick="addListItem()"><i class="fas fa-plus"></i>添加项</div>`;
+    html += `<div class="panel-btn" style="margin-top:6px;" onclick="addListItem()"><i class="far fa-plus"></i>添加项</div>`;
   }
 
   // 参数网格增删
@@ -4445,11 +4445,11 @@ function updateContentEditor(el) {
       html += `<div class="panel-row" style="gap:4px;">
         <input type="text" class="panel-input" style="flex:1;" placeholder="名称" value="${escapeAttr((pair && pair[0]) || '')}" oninput="setSpecItem(${i},0,this.value)">
         <input type="text" class="panel-input" style="flex:1;" placeholder="参数" value="${escapeAttr((pair && pair[1]) || '')}" oninput="setSpecItem(${i},1,this.value)">
-        <div class="panel-btn" style="width:28px;flex:none;padding:0;" onclick="removeSpecRow(${i})" title="删除"><i class="fas fa-minus"></i></div>
+        <div class="panel-btn" style="width:28px;flex:none;padding:0;" onclick="removeSpecRow(${i})" title="删除"><i class="far fa-minus"></i></div>
       </div>`;
     });
     html += '</div>';
-    html += `<div class="panel-btn" style="margin-top:6px;" onclick="addSpecRow()"><i class="fas fa-plus"></i>添加参数</div>`;
+    html += `<div class="panel-btn" style="margin-top:6px;" onclick="addSpecRow()"><i class="far fa-plus"></i>添加参数</div>`;
   }
 
   // 二维码内容
@@ -4466,7 +4466,7 @@ function updateContentEditor(el) {
     const d = (el.props && el.props.dir) || 'right';
     html += '<div class="panel-row">';
     [['right','arrow-right'],['left','arrow-left'],['up','arrow-up'],['down','arrow-down']].forEach(([dir, ic]) => {
-      html += `<div class="panel-btn ${d === dir ? 'active' : ''}" style="flex:1;" onclick="setArrowDir('${dir}')"><i class="fas fa-${ic}"></i></div>`;
+      html += `<div class="panel-btn ${d === dir ? 'active' : ''}" style="flex:1;" onclick="setArrowDir('${dir}')"><i class="far fa-${ic}"></i></div>`;
     });
     html += '</div>';
   }
@@ -4713,7 +4713,7 @@ function updateFloatingToolbar() {
   // Lock icon state
   const lockIcon = document.getElementById('ftLockIcon');
   if (lockIcon && el) {
-    lockIcon.className = el.locked ? 'fas fa-lock' : 'fas fa-lock-open';
+    lockIcon.className = el.locked ? 'far fa-lock' : 'far fa-lock-open';
     document.getElementById('ftLock').classList.toggle('active', !!el.locked);
   }
 
@@ -5201,7 +5201,7 @@ function updateHistoryPanel() {
     const realIdx = state.history.length - 1 - i;
     const isCurrent = realIdx === state.historyIdx;
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-light);${isCurrent?'font-weight:500;color:var(--accent);':''}">
-      <i class="fas fa-${isCurrent?'circle':'circle'}" style="font-size:8px;color:${isCurrent?'var(--accent)':'var(--text-muted)'};"></i>
+      <i class="far fa-${isCurrent?'circle':'circle'}" style="font-size:8px;color:${isCurrent?'var(--accent)':'var(--text-muted)'};"></i>
       <span style="flex:1;">${h.action}</span>
       ${isCurrent ? '<span style="font-size:10px;color:var(--accent);">当前</span>' : ''}
     </div>`;
@@ -5286,7 +5286,7 @@ function renderPagesList() {
       <div class="page-thumb-canvas" id="thumbCanvas${i}"></div>
       <div class="page-thumb-label">
         <span class="page-num">${p.name}</span>
-        <i class="fas fa-trash" style="cursor:pointer;font-size:10px;color:var(--text-muted);" onclick="event.stopPropagation();deletePage(${i})" title="删除此页"></i>
+        <i class="far fa-trash" style="cursor:pointer;font-size:10px;color:var(--text-muted);" onclick="event.stopPropagation();deletePage(${i})" title="删除此页"></i>
       </div>
     </div>
   `).join('');
@@ -5323,7 +5323,7 @@ function renderPageThumbnail(pageIdx) {
           `${s.fontFamily&&s.fontFamily!=='inherit'?';font-family:'+s.fontFamily:''}">${escapeHtml(typeof el.content==='string'?el.content:'').substring(0, 80)}</div>`;
         break;
       case 'icon': case 'prohibition': case 'mandatory': case 'arrow':
-        html += `<div style="position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;display:flex;align-items:center;justify-content:center;color:${s.color||'#6366f1'};font-size:${Math.min(el.width,el.height)*0.5}px;overflow:hidden;"><i class="fas ${(el.props&&el.props.icon)||(el.type==='arrow'?'fa-arrow-right':'fa-star')}"></i></div>`;
+        html += `<div style="position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;display:flex;align-items:center;justify-content:center;color:${s.color||'#6366f1'};font-size:${Math.min(el.width,el.height)*0.5}px;overflow:hidden;"><i class="far ${(el.props&&el.props.icon)||(el.type==='arrow'?'fa-arrow-right':'fa-star')}"></i></div>`;
         break;
       case 'qrcode':
         html += `<div style="position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;background:repeating-conic-gradient(#111 0% 25%, #fff 0% 50%) 0/6px 6px;border:2px solid #fff;overflow:hidden;"></div>`;
@@ -5348,7 +5348,7 @@ function renderPageThumbnail(pageIdx) {
         break;
       case 'feature-card':
         html += `<div style="position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:4px;overflow:hidden;">` +
-          `<i class="fas ${(el.props&&el.props.icon)||'fa-star'}" style="color:${(el.props&&el.props.iconColor)||'#6366f1'};font-size:10px;"></i>` +
+          `<i class="far ${(el.props&&el.props.icon)||'fa-star'}" style="color:${(el.props&&el.props.iconColor)||'#6366f1'};font-size:10px;"></i>` +
           `<div style="font-size:8px;font-weight:700;color:#1a1a1a;">${escapeHtml((el.content||{}).title||'')}</div>` +
           `<div style="font-size:6px;color:#64748b;">${escapeHtml((el.content||{}).desc||'').substring(0,40)}</div></div>`;
         break;
@@ -5428,8 +5428,8 @@ function togglePagePreviewPanel() {
   const collapsed = panel.classList.toggle('collapsed');
   if (toggle) {
     toggle.className = collapsed
-      ? 'fas fa-chevron-right pp-toggle'
-      : 'fas fa-chevron-left pp-toggle';
+      ? 'far fa-chevron-right pp-toggle'
+      : 'far fa-chevron-left pp-toggle';
     toggle.title = collapsed ? '展开面板' : '收起面板';
   }
   // Show the persistent reopen tab only while the panel is collapsed,
@@ -5451,12 +5451,12 @@ function updateLayersList() {
   list.innerHTML = page.elements.slice().reverse().map(el => {
     const icon = getLayerIcon(el.type);
     return `<div class="layer-item ${state.selectedIds.includes(el.id) ? 'selected' : ''}" onclick="selectElement('${el.id}')">
-      <i class="fas fa-${icon}"></i>
+      <i class="far fa-${icon}"></i>
       <span class="layer-name">${escapeHtml(el.name)}</span>
       <div class="layer-actions">
-        <i class="fas fa-${el.locked ? 'lock' : 'lock-open'}" onclick="event.stopPropagation();selectElement('${el.id}');toggleLock()" title="锁定"></i>
-        <i class="fas fa-${el.visible !== false ? 'eye' : 'eye-slash'}" onclick="event.stopPropagation();toggleVisibility('${el.id}')" title="显示/隐藏"></i>
-        <i class="fas fa-trash" onclick="event.stopPropagation();selectElement('${el.id}');deleteSelected()" title="删除"></i>
+        <i class="far fa-${el.locked ? 'lock' : 'lock-open'}" onclick="event.stopPropagation();selectElement('${el.id}');toggleLock()" title="锁定"></i>
+        <i class="far fa-${el.visible !== false ? 'eye' : 'eye-slash'}" onclick="event.stopPropagation();toggleVisibility('${el.id}')" title="显示/隐藏"></i>
+        <i class="far fa-trash" onclick="event.stopPropagation();selectElement('${el.id}');deleteSelected()" title="删除"></i>
       </div>
     </div>`;
   }).join('');
@@ -7380,7 +7380,7 @@ function renderCatalogGrid() {
   }
 
   if (items.length === 0) {
-    grid.innerHTML = `<div class="catalog-empty"><i class="fas fa-folder-open"></i><p>暂无说明书，点击右下角"新建说明书"创建</p></div>`;
+    grid.innerHTML = `<div class="catalog-empty"><i class="far fa-folder-open"></i><p>暂无说明书，点击右下角"新建说明书"创建</p></div>`;
     return;
   }
 
@@ -8701,7 +8701,7 @@ function applyPersistData(data) {
     panel.classList.add('collapsed');
     if (reopen) reopen.classList.add('show');
     const t = document.getElementById('ppToggle');
-    if (t) { t.className = 'fas fa-chevron-right pp-toggle'; t.title = '展开面板'; }
+    if (t) { t.className = 'far fa-chevron-right pp-toggle'; t.title = '展开面板'; }
   } else if (panel) {
     panel.classList.remove('collapsed');
     if (reopen) reopen.classList.remove('show');
@@ -8764,12 +8764,12 @@ function renderDraftsList() {
     const pageCount = (d.pages || []).length;
     return `<div class="draft-card">
       <div class="draft-info">
-        <div class="draft-name"><i class="fas fa-file-lines"></i> ${escapeHtml(d.name)}</div>
+        <div class="draft-name"><i class="far fa-file-lines"></i> ${escapeHtml(d.name)}</div>
         <div class="draft-meta">${pageCount} 页 · ${ts}</div>
       </div>
       <div class="draft-actions">
-        <button class="draft-btn" onclick="loadDraft(${i})"><i class="fas fa-folder-open"></i> 打开</button>
-        <button class="draft-btn danger" onclick="deleteDraft(${i})"><i class="fas fa-trash"></i> 删除</button>
+        <button class="draft-btn" onclick="loadDraft(${i})"><i class="far fa-folder-open"></i> 打开</button>
+        <button class="draft-btn danger" onclick="deleteDraft(${i})"><i class="far fa-trash"></i> 删除</button>
       </div>
     </div>`;
   }).join('');
@@ -8997,13 +8997,13 @@ function showExportDoneModal(msgHtml, type) {
     if (titleEl) titleEl.textContent = '导出失败';
     if (iconWrap) {
       iconWrap.style.background = '#fdeaea';
-      iconWrap.innerHTML = '<i class="fas fa-times" style="font-size:30px;color:#e74c3c;"></i>';
+      iconWrap.innerHTML = '<i class="far fa-times" style="font-size:30px;color:#e74c3c;"></i>';
     }
   } else {
     if (titleEl) titleEl.textContent = '导出完成';
     if (iconWrap) {
       iconWrap.style.background = '#e8f8f0';
-      iconWrap.innerHTML = '<i class="fas fa-check" style="font-size:30px;color:#27ae60;"></i>';
+      iconWrap.innerHTML = '<i class="far fa-check" style="font-size:30px;color:#27ae60;"></i>';
     }
   }
   openModal('exportDoneModal');
@@ -9234,10 +9234,10 @@ init();
 <div class="floating-toolbar" id="floatingToolbar">
   <!-- Group 1: Undo / Redo / Copy / Paste -->
   <div class="floating-toolbar-group">
-    <button class="toolbar-btn" id="ftUndo" title="撤销 (Ctrl+Z)" onclick="undo()"><i class="fas fa-undo"></i></button>
-    <button class="toolbar-btn" id="ftRedo" title="重做 (Ctrl+Y)" onclick="redo()"><i class="fas fa-redo"></i></button>
-    <button class="toolbar-btn" id="ftCopy" title="复制 (Ctrl+C)" onclick="copyElement()"><i class="fas fa-copy"></i></button>
-    <button class="toolbar-btn" id="ftPaste" title="粘贴 (Ctrl+V)" onclick="pasteElement()"><i class="fas fa-paste"></i></button>
+    <button class="toolbar-btn" id="ftUndo" title="撤销 (Ctrl+Z)" onclick="undo()"><i class="far fa-undo"></i></button>
+    <button class="toolbar-btn" id="ftRedo" title="重做 (Ctrl+Y)" onclick="redo()"><i class="far fa-redo"></i></button>
+    <button class="toolbar-btn" id="ftCopy" title="复制 (Ctrl+C)" onclick="copyElement()"><i class="far fa-copy"></i></button>
+    <button class="toolbar-btn" id="ftPaste" title="粘贴 (Ctrl+V)" onclick="pasteElement()"><i class="far fa-paste"></i></button>
   </div>
   <!-- Group 2: Font Family & Size -->
   <div class="floating-toolbar-group">
@@ -9267,31 +9267,31 @@ init();
   <div class="floating-toolbar-group">
     <button class="toolbar-btn" id="ftFontSizeUp" title="增大字号" onclick="adjustFontSize(1)"><span style="font-size:11px;font-weight:bold;">A⁺</span></button>
     <button class="toolbar-btn" id="ftFontSizeDown" title="减小字号" onclick="adjustFontSize(-1)"><span style="font-size:11px;font-weight:bold;">A⁻</span></button>
-    <button class="toolbar-btn" id="ftBold" title="加粗 (Ctrl+B)" onclick="toggleStyle('fontWeight','bold','normal')"><i class="fas fa-bold"></i></button>
-    <button class="toolbar-btn" id="ftItalic" title="斜体 (Ctrl+I)" onclick="toggleStyle('fontStyle','italic','normal')"><i class="fas fa-italic"></i></button>
-    <button class="toolbar-btn" id="ftUnderline" title="下划线 (Ctrl+U)" onclick="toggleStyle('textDecoration','underline','none')"><i class="fas fa-underline"></i></button>
-    <button class="toolbar-btn" id="ftStrikethrough" title="删除线" onclick="toggleStrikethrough()"><i class="fas fa-strikethrough"></i></button>
+    <button class="toolbar-btn" id="ftBold" title="加粗 (Ctrl+B)" onclick="toggleStyle('fontWeight','bold','normal')"><i class="far fa-bold"></i></button>
+    <button class="toolbar-btn" id="ftItalic" title="斜体 (Ctrl+I)" onclick="toggleStyle('fontStyle','italic','normal')"><i class="far fa-italic"></i></button>
+    <button class="toolbar-btn" id="ftUnderline" title="下划线 (Ctrl+U)" onclick="toggleStyle('textDecoration','underline','none')"><i class="far fa-underline"></i></button>
+    <button class="toolbar-btn" id="ftStrikethrough" title="删除线" onclick="toggleStrikethrough()"><i class="far fa-strikethrough"></i></button>
     <input type="color" class="toolbar-btn ft-color" style="width:24px;padding:2px;" title="文字颜色" onchange="applyStyle('color', this.value)" id="ftTextColor">
     <div class="ft-sep"></div>
     <input type="color" class="toolbar-btn ft-color" style="width:24px;padding:2px;" title="背景颜色" onchange="applyStyle('backgroundColor', this.value)" id="ftBgColor" value="#ffffff">
   </div>
   <!-- Group 4: Alignment & Indent -->
   <div class="floating-toolbar-group">
-    <button class="toolbar-btn" id="ftAlignLeft" title="左对齐" onclick="applyStyle('textAlign','left')"><i class="fas fa-align-left"></i></button>
-    <button class="toolbar-btn" id="ftAlignCenter" title="居中" onclick="applyStyle('textAlign','center')"><i class="fas fa-align-center"></i></button>
-    <button class="toolbar-btn" id="ftAlignRight" title="右对齐" onclick="applyStyle('textAlign','right')"><i class="fas fa-align-right"></i></button>
-    <button class="toolbar-btn" id="ftAlignJustify" title="两端对齐" onclick="applyStyle('textAlign','justify')"><i class="fas fa-align-justify"></i></button>
+    <button class="toolbar-btn" id="ftAlignLeft" title="左对齐" onclick="applyStyle('textAlign','left')"><i class="far fa-align-left"></i></button>
+    <button class="toolbar-btn" id="ftAlignCenter" title="居中" onclick="applyStyle('textAlign','center')"><i class="far fa-align-center"></i></button>
+    <button class="toolbar-btn" id="ftAlignRight" title="右对齐" onclick="applyStyle('textAlign','right')"><i class="far fa-align-right"></i></button>
+    <button class="toolbar-btn" id="ftAlignJustify" title="两端对齐" onclick="applyStyle('textAlign','justify')"><i class="far fa-align-justify"></i></button>
     <div class="ft-sep"></div>
-    <button class="toolbar-btn" id="ftLineHeight" title="行距" onclick="cycleLineHeight()"><i class="fas fa-arrows-alt-v" style="font-size:10px;"></i></button>
-    <button class="toolbar-btn" id="ftLetterSpacing" title="字间距" onclick="cycleLetterSpacing()"><i class="fas fa-text-width" style="font-size:10px;"></i></button>
+    <button class="toolbar-btn" id="ftLineHeight" title="行距" onclick="cycleLineHeight()"><i class="far fa-arrows-alt-v" style="font-size:10px;"></i></button>
+    <button class="toolbar-btn" id="ftLetterSpacing" title="字间距" onclick="cycleLetterSpacing()"><i class="far fa-text-width" style="font-size:10px;"></i></button>
   </div>
   <!-- Group 5: Layer & Actions -->
   <div class="floating-toolbar-group">
-    <button class="toolbar-btn" id="ftBringFront" title="置于顶层" onclick="bringToFront()"><i class="fas fa-layer-group"></i><sup style="font-size:8px;top:-4px;position:relative;">↑</sup></button>
-    <button class="toolbar-btn" id="ftSendBack" title="置于底层" onclick="sendToBack()"><i class="fas fa-layer-group"></i><sub style="font-size:8px;bottom:-3px;position:relative;">↓</sub></button>
-    <button class="toolbar-btn" id="ftLock" title="锁定/解锁" onclick="toggleLock()"><i class="fas fa-lock-open" id="ftLockIcon"></i></button>
-    <button class="toolbar-btn" id="ftDuplicate" title="复制元素 (Ctrl+D)" onclick="duplicateElement()"><i class="fas fa-clone"></i></button>
-    <button class="toolbar-btn" id="ftDelete" title="删除 (Delete)" onclick="deleteSelected()"><i class="fas fa-trash"></i></button>
+    <button class="toolbar-btn" id="ftBringFront" title="置于顶层" onclick="bringToFront()"><i class="far fa-layer-group"></i><sup style="font-size:8px;top:-4px;position:relative;">↑</sup></button>
+    <button class="toolbar-btn" id="ftSendBack" title="置于底层" onclick="sendToBack()"><i class="far fa-layer-group"></i><sub style="font-size:8px;bottom:-3px;position:relative;">↓</sub></button>
+    <button class="toolbar-btn" id="ftLock" title="锁定/解锁" onclick="toggleLock()"><i class="far fa-lock-open" id="ftLockIcon"></i></button>
+    <button class="toolbar-btn" id="ftDuplicate" title="复制元素 (Ctrl+D)" onclick="duplicateElement()"><i class="far fa-clone"></i></button>
+    <button class="toolbar-btn" id="ftDelete" title="删除 (Delete)" onclick="deleteSelected()"><i class="far fa-trash"></i></button>
   </div>
 </div>
 </body>
