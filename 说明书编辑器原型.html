@@ -7,8 +7,9 @@
   <meta name="app-version" content="1.3">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="vendor/pdf.min.js"></script>
-  <!-- v1.3 导出引擎：jsPDF 生成 PDF + html2canvas 页面栅格化（本地离线，与 pdf.js 一致策略）-->
+  <!-- v1.3 导出引擎：jsPDF 生成矢量 PDF + svg2pdf 将页面转为可编辑矢量 + html2canvas 栅格（PNG/HTML/Word 用）-->
   <script src="vendor/jspdf.umd.min.js"></script>
+  <script src="vendor/svg2pdf.umd.min.js"></script>
   <script src="vendor/html2canvas.min.js"></script>
   <!-- Tesseract.js 纯前端 OCR 引擎：用于识别扫描件/图片型 PDF 的文字，无需 API Key -->
   <script src="https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
@@ -2314,7 +2315,12 @@
           <div class="export-card selected" data-format="pdf" onclick="selectExportFormat(this)">
             <i class="fas fa-file-pdf" style="color:#e74c3c;"></i>
             <div class="ex-name">PDF</div>
-            <div class="ex-desc">高质量排版</div>
+            <div class="ex-desc">可编辑矢量</div>
+          </div>
+          <div class="export-card" data-format="svg" onclick="selectExportFormat(this)">
+            <i class="fas fa-bezier-curve" style="color:#0ea5e9;"></i>
+            <div class="ex-name">SVG</div>
+            <div class="ex-desc">矢量（AI 首选）</div>
           </div>
           <div class="export-card" data-format="word" onclick="selectExportFormat(this)">
             <i class="fas fa-file-word" style="color:#2b579a;"></i>
@@ -5713,28 +5719,232 @@ function exportBaseName() {
   return (document.title || '说明书').replace(/[\\/:*?"<>|]/g, '_');
 }
 
+// ---- 矢量导出引擎（可编辑 PDF / SVG）：逐元素序列化为矢量图元 ----
+const TEXT_TYPES = new Set(['text','h1','h2','h3','toc-title','toc-item','body','body-small',
+  'note-text','warning-text','caution-text','risk-text','heading','quote','callout','page-number']);
+
+function num(v, def) { const n = parseFloat(v); return isNaN(n) ? def : n; }
+function parseColor(c) {
+  if (!c || c === 'transparent' || c === 'none' || c === '' || /rgba\([^)]*,\s*0\)/.test(c)) return null;
+  return c;
+}
+function xmlEscape(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function wrapRotate(inner, el) {
+  const cx = (el.x + el.width / 2).toFixed(1), cy = (el.y + el.height / 2).toFixed(1);
+  return `<g transform="rotate(${el.rotation} ${cx} ${cy})">${inner}</g>`;
+}
+
+// 文字 → 可编辑 <text>（逐行 tspan）
+function elToTextSvg(el) {
+  const s = el.style || {};
+  const fs = num(s.fontSize, 14);
+  const fill = parseColor(s.color) || '#333333';
+  const fw = (s.fontWeight === 'bold' || s.fontWeight === '700') ? 'bold' : (s.fontWeight || 'normal');
+  const ff = (s.fontFamily && s.fontFamily !== 'inherit') ? s.fontFamily : 'sans-serif';
+  const align = s.textAlign || 'left';
+  const pad = num(s.padding, 0);
+  let anchor, tx;
+  if (align === 'center') { anchor = 'middle'; tx = el.x + el.width / 2; }
+  else if (align === 'right') { anchor = 'end'; tx = el.x + el.width; }
+  else { anchor = 'start'; tx = el.x + pad; }
+  const lh = num(s.lineHeight, 1.2);
+  const lines = String(el.content == null ? '' : el.content).split('\n');
+  let tspans = '';
+  lines.forEach((ln, i) => {
+    const txt = xmlEscape(ln.length ? ln : ' ');
+    if (i === 0) tspans += `<tspan x="${tx.toFixed(1)}" y="${(el.y + fs).toFixed(1)}">${txt}</tspan>`;
+    else tspans += `<tspan x="${tx.toFixed(1)}" dy="${(fs * lh).toFixed(1)}">${txt}</tspan>`;
+  });
+  let t = `<text font-family="${xmlEscape(ff)}" font-size="${fs}" font-weight="${fw}" `
+    + `font-style="${(s.fontStyle === 'italic') ? 'italic' : 'normal'}" fill="${fill}" text-anchor="${anchor}">${tspans}</text>`;
+  if (el.rotation) t = wrapRotate(t, el);
+  return t;
+}
+
+// 矩形 / 圆角矩形
+function elToRectSvg(el) {
+  const s = el.style || {};
+  const fill = parseColor(s.backgroundColor);
+  const rxB = s.borderRadius || '0px';
+  const rx = rxB.endsWith('%') ? (num(rxB, 0) / 100 * Math.min(el.width, el.height)) : num(rxB, 0);
+  let stroke = 'none', sw = 0;
+  if (s.borderWidth && s.borderWidth !== '0px' && s.borderStyle && s.borderStyle !== 'none') {
+    sw = num(s.borderWidth, 0); stroke = parseColor(s.borderColor) || '#000000';
+  }
+  let r = `<rect x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" rx="${rx.toFixed(2)}" ry="${rx.toFixed(2)}" fill="${fill || 'none'}" stroke="${stroke}" stroke-width="${sw}"/>`;
+  if (el.rotation) r = wrapRotate(r, el);
+  return r;
+}
+function elToCircleSvg(el) {
+  const s = el.style || {}; const fill = parseColor(s.backgroundColor);
+  const cx = el.x + el.width / 2, cy = el.y + el.height / 2, r = Math.min(el.width, el.height) / 2;
+  let c = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill || 'none'}"/>`;
+  if (el.rotation) c = wrapRotate(c, el);
+  return c;
+}
+// 分割线 / 直线
+function elToLineSvg(el) {
+  const s = el.style || {};
+  const color = parseColor(s.backgroundColor) || parseColor(s.color) || '#333333';
+  if (el.type === 'line') {
+    const o = (el.props && el.props.orientation) || 'h';
+    const th = num((el.props && el.props.thickness), 2) || 2;
+    if (o === 'v') return `<line x1="${(el.x + el.width / 2).toFixed(1)}" y1="${el.y}" x2="${(el.x + el.width / 2).toFixed(1)}" y2="${el.y + el.height}" stroke="${color}" stroke-width="${th}"/>`;
+    return `<line x1="${el.x}" y1="${(el.y + el.height / 2).toFixed(1)}" x2="${el.x + el.width}" y2="${(el.y + el.height / 2).toFixed(1)}" stroke="${color}" stroke-width="${th}"/>`;
+  }
+  return `<rect x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" fill="${color}"/>`;
+}
+// 箭头
+function elToArrowSvg(el) {
+  const color = parseColor(el.style && el.style.color) || '#333333';
+  const dir = (el.props && el.props.dir) || 'right';
+  const x = el.x, y = el.y, w = el.width, h = el.height, cy = y + h / 2;
+  let line, head;
+  if (dir === 'left') { const hx = x, tx = x + w * 0.3; line = `<line x1="${x + w}" y1="${cy}" x2="${tx}" y2="${cy}" stroke="${color}" stroke-width="2"/>`; head = `<polygon points="${tx},${cy - 6} ${hx},${cy} ${tx},${cy + 6}" fill="${color}"/>`; }
+  else if (dir === 'up') { const hx = y, ty = y + h * 0.3; line = `<line x1="${x + w / 2}" y1="${y + h}" x2="${x + w / 2}" y2="${ty}" stroke="${color}" stroke-width="2"/>`; head = `<polygon points="${x + w / 2 - 6},${ty} ${x + w / 2},${y} ${x + w / 2 + 6},${ty}" fill="${color}"/>`; }
+  else if (dir === 'down') { const hx = y + h, ty = y + h * 0.7; line = `<line x1="${x + w / 2}" y1="${y}" x2="${x + w / 2}" y2="${ty}" stroke="${color}" stroke-width="2"/>`; head = `<polygon points="${x + w / 2 - 6},${ty} ${x + w / 2},${y + h} ${x + w / 2 + 6},${ty}" fill="${color}"/>`; }
+  else { const hx = x + w, tx = x + w * 0.7; line = `<line x1="${x}" y1="${cy}" x2="${tx}" y2="${cy}" stroke="${color}" stroke-width="2"/>`; head = `<polygon points="${tx},${cy - 6} ${hx},${cy} ${tx},${cy + 6}" fill="${color}"/>`; }
+  let a = `<g>${line}${head}</g>`;
+  if (el.rotation) a = wrapRotate(a, el);
+  return a;
+}
+// 图片（data URL 直接嵌入；否则栅格该元素）
+async function elToImageSvg(el) {
+  const src = (el.props && el.props.src) || '';
+  if (src && src.startsWith('data:')) {
+    let img = `<image x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" xlink:href="${src}" preserveAspectRatio="none"/>`;
+    if (el.rotation) img = wrapRotate(img, el);
+    return img;
+  }
+  return await elToRasterSvg(el, 2);
+}
+// 导入的 PDF 矢量层 → 原样内联 <path>（保持完全可编辑）
+function elToVectorSvg(el, pw, ph) {
+  const svg = (el.props && el.props.svg) || '';
+  if (!svg) return '';
+  const m = svg.match(/<svg[^>]*\bwidth="([\d.]+)"[^>]*\bheight="([\d.]+)"/);
+  const ow = m ? parseFloat(m[1]) : pw, oh = m ? parseFloat(m[2]) : ph;
+  let inner = svg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+  inner = inner.replace(/\sxmlns(:\w+)?="[^"]*"/g, ''); // 根已声明，避免重复
+  const sx = (el.width / ow).toFixed(6), sy = (el.height / oh).toFixed(6);
+  return `<g transform="translate(${el.x},${el.y}) scale(${sx},${sy})">${inner}</g>`;
+}
+// 复杂组合组件（封面/目录/表格/二维码等）→ 单元素栅格化嵌入，保证位置外观正确
+async function elToRasterSvg(el, scale) {
+  const div = document.createElement('div');
+  div.style.cssText = `position:absolute;left:0;top:0;width:${el.width}px;height:${el.height}px;box-sizing:border-box;overflow:hidden;`;
+  applyElementStyles(div, el);
+  div.innerHTML = renderElementContent(el);
+  div.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
+  div.querySelectorAll('.resize-handles,.rotate-handle,.selection-outline').forEach(e => e.remove());
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:absolute;left:-99999px;top:0;';
+  holder.appendChild(div);
+  document.body.appendChild(holder);
+  try {
+    const canvas = await html2canvas(div, { scale: scale, backgroundColor: (el.style && parseColor(el.style.backgroundColor)) || '#ffffff', logging: false, useCORS: true });
+    const dataUrl = canvas.toDataURL('image/png');
+    let img = `<image x="0" y="0" width="${el.width}" height="${el.height}" xlink:href="${dataUrl}" preserveAspectRatio="none"/>`;
+    if (el.rotation) img = wrapRotate(img, el);
+    return `<g transform="translate(${el.x},${el.y})">${img}</g>`;
+  } finally { holder.remove(); }
+}
+
+// 构建单页矢量 SVG 字符串
+async function buildPageSVG(page, scale, watermark) {
+  const pw = page.w || PAGE_W, ph = page.h || PAGE_H;
+  let bgSvg = `<rect x="0" y="0" width="${pw}" height="${ph}" fill="#ffffff"/>`;
+  if (page.bg && state.showBg) {
+    bgSvg = `<image x="0" y="0" width="${pw}" height="${ph}" xlink:href="${page.bg}" preserveAspectRatio="none"/>`;
+  }
+  let body = '';
+  for (const el of (page.elements || [])) {
+    if (el.visible === false) continue;
+    const t = el.type;
+    if (TEXT_TYPES.has(t)) body += elToTextSvg(el);
+    else if (t === 'shape' || t === 'shape-rounded') body += elToRectSvg(el);
+    else if (t === 'shape-circle') body += elToCircleSvg(el);
+    else if (t === 'divider' || t === 'line') body += elToLineSvg(el);
+    else if (t === 'arrow') body += elToArrowSvg(el);
+    else if (t === 'image') body += await elToImageSvg(el);
+    else if (t === 'vector') body += elToVectorSvg(el, pw, ph);
+    else body += await elToRasterSvg(el, scale);
+  }
+  if (watermark) {
+    const fs = Math.round(Math.min(pw, ph) / 8);
+    body += `<g transform="rotate(-28 ${(pw/2).toFixed(1)} ${(ph/2).toFixed(1)})" opacity="0.1">`
+      + `<text x="${(pw/2).toFixed(1)}" y="${(ph/2).toFixed(1)}" font-size="${fs}" font-weight="700" text-anchor="middle" fill="#000">${xmlEscape(watermark)}</text></g>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" `
+    + `width="${pw}" height="${ph}" viewBox="0 0 ${pw} ${ph}">${bgSvg}${body}</svg>`;
+}
+
 // ---- 各格式导出 ----
+
+// 可编辑矢量 PDF：用 svg2pdf 将页面 SVG 转为矢量 PDF
 async function exportPDF(pages, scale, watermark) {
   const { jsPDF } = window.jspdf;
   if (!jsPDF) { showToast('PDF 引擎未加载，请刷新后重试', 'error'); return; }
-  showToast('正在生成 PDF，请稍候…', 'info');
-  const suggested = exportBaseName() + '.pdf';
-  const handle = await pickSaveFile(suggested, [{ description: 'PDF 文件', accept: { 'application/pdf': ['.pdf'] } }]);
+  if (!jsPDF.API || !jsPDF.API.svg) { showToast('矢量 PDF 模块未加载，请刷新后重试', 'error'); return; }
+  showToast('正在生成可编辑矢量 PDF…', 'info');
+  const fname = exportBaseName() + '.pdf';
+  const handle = await pickSaveFile(fname, [{ description: 'PDF 文件', accept: { 'application/pdf': ['.pdf'] } }]);
   if (handle === 'aborted') return;
 
   const pw0 = pages[0].w || PAGE_W, ph0 = pages[0].h || PAGE_H;
   const pdf = new jsPDF({ unit: 'px', format: [pw0, ph0], orientation: pw0 > ph0 ? 'l' : 'p' });
-  let first = true;
-  for (const page of pages) {
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
     const pw = page.w || PAGE_W, ph = page.h || PAGE_H;
-    if (!first) pdf.addPage([pw, ph], pw > ph ? 'l' : 'p');
-    const canvas = await renderPageCanvas(page, scale, watermark);
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pw, ph);
-    first = false;
+    if (i > 0) pdf.addPage([pw, ph], pw > ph ? 'l' : 'p');
+    const svgStr = await buildPageSVG(page, scale, watermark);
+    const doc = new DOMParser().parseFromString(svgStr, 'image/svg+xml');
+    const svgEl = doc.documentElement;
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:-99999px;top:0;width:0;height:0;overflow:hidden;';
+    holder.appendChild(svgEl); document.body.appendChild(holder);
+    try {
+      await pdf.svg(svgEl, { x: 0, y: 0, width: pw, height: ph });
+    } catch (e) {
+      holder.remove();
+      console.error('矢量 PDF 转换失败', e);
+      throw new Error('矢量转换失败：' + (e && e.message ? e.message : e));
+    }
+    holder.remove();
   }
   const blob = pdf.output('blob');
-  if (handle) { await writeBlobToHandle(handle, blob); showToast('PDF 已保存到所选位置 ✓', 'success'); }
-  else { fallbackDownload(blob, suggested); showToast('PDF 已下载到默认文件夹（浏览器不支持自选路径）', 'success'); }
+  if (handle) { await writeBlobToHandle(handle, blob); showToast('可编辑矢量 PDF 已保存 ✓', 'success'); }
+  else { fallbackDownload(blob, fname); showToast('PDF 已下载到默认文件夹（浏览器不支持自选路径）', 'success'); }
+}
+
+// 可编辑矢量 SVG（Illustrator 最原生格式）
+async function exportSVG(pages, scale, watermark) {
+  showToast('正在生成矢量 SVG…', 'info');
+  if (pages.length > 1) {
+    let dir = null;
+    if (window.showDirectoryPicker) {
+      try { dir = await window.showDirectoryPicker(); }
+      catch (e) { if (e && e.name === 'AbortError') return; dir = null; }
+    }
+    for (let i = 0; i < pages.length; i++) {
+      const svg = await buildPageSVG(pages[i], scale, watermark);
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const fn = `${exportBaseName()}_p${i + 1}.svg`;
+      if (dir) { const f = await dir.getFileHandle(fn, { create: true }); const w = await f.createWritable(); await w.write(blob); await w.close(); }
+      else fallbackDownload(blob, fn);
+    }
+    showToast(dir ? `已导出 ${pages.length} 个 SVG 到所选文件夹 ✓` : `已下载 ${pages.length} 个 SVG`, 'success');
+  } else {
+    const svg = await buildPageSVG(pages[0], scale, watermark);
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const fn = `${exportBaseName()}.svg`;
+    const handle = await pickSaveFile(fn, [{ description: 'SVG 矢量图', accept: { 'image/svg+xml': ['.svg'] } }]);
+    if (handle === 'aborted') return;
+    if (handle) { await writeBlobToHandle(handle, blob); showToast('SVG 已保存 ✓', 'success'); }
+    else { fallbackDownload(blob, fn); showToast('SVG 已下载到默认文件夹', 'success'); }
+  }
 }
 
 async function exportImages(pages, scale, watermark) {
@@ -5808,7 +6018,7 @@ async function exportWord(pages, watermark) {
 
 async function confirmExport() {
   const format = state.selectedExportFormat;
-  const names = { pdf: 'PDF', word: 'Word', excel: 'Excel', ppt: 'PPT', html: 'HTML', image: '图片' };
+  const names = { pdf: 'PDF', word: 'Word', excel: 'Excel', ppt: 'PPT', html: 'HTML', image: '图片', svg: 'SVG' };
   const allPages = document.getElementById('expAllPages') ? document.getElementById('expAllPages').checked : true;
   const watermarkOn = document.getElementById('expWatermark') ? document.getElementById('expWatermark').checked : false;
   const scale = parseInt(document.getElementById('expScale') ? document.getElementById('expScale').value : '3', 10) || 3;
@@ -5821,6 +6031,8 @@ async function confirmExport() {
   try {
     if (format === 'pdf') {
       await exportPDF(pages, scale, watermark);
+    } else if (format === 'svg') {
+      await exportSVG(pages, scale, watermark);
     } else if (format === 'image') {
       await exportImages(pages, scale, watermark);
     } else if (format === 'html') {
