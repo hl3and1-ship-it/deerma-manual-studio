@@ -7,12 +7,14 @@
   <meta name="app-version" content="1.3">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="vendor/pdf.min.js"></script>
-  <!-- v1.3 导出引擎：jsPDF 生成矢量 PDF + svg2pdf 将页面转为可编辑矢量 + html2canvas 栅格（PNG/HTML/Word 用）-->
-  <script src="vendor/jspdf.umd.min.js"></script>
-  <script src="vendor/svg2pdf.umd.min.js"></script>
+  <!-- v1.3 导出引擎：pdf-lib 生成可编辑矢量 PDF（中文为 CID 活文字 + ToUnicode，Illustrator 可改字） + html2canvas 栅格（PNG/HTML/Word 用） -->
   <script src="vendor/html2canvas.min.js"></script>
-  <!-- opentype.js：把含中文的文字转矢量轮廓，确保 PDF 在 Illustrator 中可编辑且中文正确显示 -->
+  <!-- opentype.js：SVG 导出时把含中文文字转矢量轮廓，确保 Illustrator 中可编辑且中文正确显示 -->
   <script src="vendor/opentype.min.js"></script>
+  <!-- fontkit：pdf-lib 嵌入自定义（中文）字体所需 -->
+  <script src="vendor/fontkit.umd.js"></script>
+  <script src="vendor/pdf-lib.min.js"></script>
+  <script src="vendor/fontkit.umd.js"></script>
   <!-- Tesseract.js 纯前端 OCR 引擎：用于识别扫描件/图片型 PDF 的文字，无需 API Key -->
   <script src="https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
   <style>
@@ -2323,6 +2325,11 @@
             <i class="fas fa-bezier-curve" style="color:#0ea5e9;"></i>
             <div class="ex-name">SVG</div>
             <div class="ex-desc">矢量（AI 首选）</div>
+          </div>
+          <div class="export-card" data-format="ai" onclick="selectExportFormat(this)">
+            <i class="fas fa-palette" style="color:#ff7a00;"></i>
+            <div class="ex-name">AI</div>
+            <div class="ex-desc">Illustrator 原生</div>
           </div>
           <div class="export-card" data-format="word" onclick="selectExportFormat(this)">
             <i class="fas fa-file-word" style="color:#2b579a;"></i>
@@ -5739,8 +5746,8 @@ function wrapRotate(inner, el) {
 }
 
 // ---- 中文字体（懒加载，导出时按需注入，避免页面打开即加载 16MB）----
-// 含中文的文字必须转矢量轮廓：svg2pdf 不支持 Type0/CID 中文字体，标准字体无法编码中文，
-// 因此用 opentype.js 把字形转成 <path>，Illustrator 中即可作为可编辑矢量路径。
+// SVG 导出：含中文的文字转矢量轮廓 <path>（Illustrator 中作为可编辑矢量路径，中文必现）；
+// PDF 导出则改用 pdf-lib + fontkit 把中文写成 CID 活文字（见 ensurePdfFonts / drawTextPdf）。
 const _cjkFontCache = {};
 function loadScriptOnce(src) {
   return new Promise((res, rej) => {
@@ -5780,7 +5787,7 @@ async function elToTextSvg(el) {
   const text = String(el.content == null ? '' : el.content);
   const lines = text.split('\n');
 
-  // 纯拉丁：保留为可编辑 <text>（svg2pdf 用标准字体，Illustrator 中可改字）
+  // 纯拉丁：保留为可编辑 <text>（Illustrator 中可改字）
   if (!hasCJK(text)) {
     let anchor, tx;
     if (align === 'center') { anchor = 'middle'; tx = el.x + el.width / 2; }
@@ -5941,45 +5948,264 @@ async function buildPageSVG(page, scale, watermark) {
     + `width="${pw}" height="${ph}" viewBox="0 0 ${pw} ${ph}">${bgSvg}${body}</svg>`;
 }
 
-// ---- 各格式导出 ----
 
-// 可编辑矢量 PDF：用 svg2pdf 将页面 SVG 转为矢量 PDF
-async function exportPDF(pages, scale, watermark) {
-  const { jsPDF } = window.jspdf;
-  if (!jsPDF) { showToast('PDF 引擎未加载，请刷新后重试', 'error'); return; }
-  if (!jsPDF.API || !jsPDF.API.svg) { showToast('矢量 PDF 模块未加载，请刷新后重试', 'error'); return; }
-  showToast('正在生成可编辑矢量 PDF…', 'info');
-  const fname = exportBaseName() + '.pdf';
-  const handle = await pickSaveFile(fname, [{ description: 'PDF 文件', accept: { 'application/pdf': ['.pdf'] } }]);
-  if (handle === 'aborted') return;
 
-  const pw0 = pages[0].w || PAGE_W, ph0 = pages[0].h || PAGE_H;
-  const pdf = new jsPDF({ unit: 'px', format: [pw0, ph0], orientation: pw0 > ph0 ? 'l' : 'p' });
+// ===== pdf-lib 可编辑矢量 PDF / AI 导出（中文为活文字，Illustrator 可改字）=====
+const _pdfFontBytesCache = {};
+async function getCjkFontBytes(weight) {
+  const key = weight === 'bold' ? 'bold' : 'regular';
+  if (_pdfFontBytesCache[key]) return _pdfFontBytesCache[key];
+  const src2 = key === 'bold' ? 'vendor/noto-sans-sc-bold.font.js' : 'vendor/noto-sans-sc.font.js';
+  await loadScriptOnce(src2);
+  const b64 = key === 'bold' ? window.__FONT_BOLD_B64 : window.__FONT_REGULAR_B64;
+  if (!b64) throw new Error('中文字体未加载，请刷新后重试');
+  const bin = atob(b64), len = bin.length, bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+  _pdfFontBytesCache[key] = bytes;
+  return bytes;
+}
+const _pdfEmbedCache = new WeakMap();
+async function ensurePdfFonts(pdfDoc) {
+  let cache = _pdfEmbedCache.get(pdfDoc);
+  if (!cache) {
+    if (!pdfDoc.__fontkitReady) { pdfDoc.registerFontkit(window.fontkit); pdfDoc.__fontkitReady = true; }
+    const regBytes = await getCjkFontBytes('regular');
+    const boldBytes = await getCjkFontBytes('bold');
+    cache = {
+      reg: await pdfDoc.embedFont(regBytes, { subset: true }),
+      bold: await pdfDoc.embedFont(boldBytes, { subset: true }),
+    };
+    _pdfEmbedCache.set(pdfDoc, cache);
+  }
+  return cache;
+}
+function pdfColor(c) {
+  const s = parseColor(c);
+  if (!s) return null;
+  const m = s.match(/#([0-9a-f]{6})/i);
+  if (m) { const n = parseInt(m[1], 16); return PDFLib.rgb((n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255); }
+  const rgb = s.match(/rgba?\(([^)]+)\)/i);
+  if (rgb) { const p = rgb[1].split(',').map(x => parseFloat(x)); return PDFLib.rgb((p[0] / 255) || 0, (p[1] / 255) || 0, (p[2] / 255) || 0); }
+  const named = { black: [0, 0, 0], white: [1, 1, 1], red: [0.9, 0, 0], green: [0, 0.5, 0], blue: [0, 0, 0.8], gray: [0.5, 0.5, 0.5], grey: [0.5, 0.5, 0.5], yellow: [1, 0.85, 0] };
+  if (named[s.toLowerCase()]) { const v = named[s.toLowerCase()]; return PDFLib.rgb(v[0], v[1], v[2]); }
+  return PDFLib.rgb(0.2, 0.2, 0.2);
+}
+function pdfColorOr(c, fallback) { const r = pdfColor(c); return r || fallback; }
+
+function drawTextPdf(page, el, ph, fonts) {
+  const s = el.style || {};
+  const fs = num(s.fontSize, 14);
+  const col = pdfColorOr(s.color, PDFLib.rgb(0.2, 0.2, 0.2));
+  const isBold = (s.fontWeight === 'bold' || s.fontWeight === '700');
+  const font = isBold ? fonts.bold : fonts.reg;
+  const lh = num(s.lineHeight, 1.2);
+  const align = s.textAlign || 'left';
+  const pad = num(s.padding, 0);
+  const lineH = fs * lh;
+  const lines = String(el.content == null ? '' : el.content).split('\n');
+  const ascent = fs * 0.82;
+  lines.forEach((ln, i) => {
+    const text = ln.length ? ln : ' ';
+    const tw = font.widthOfTextAtSize(text, fs);
+    let x;
+    if (align === 'center') x = el.x + (el.width - tw) / 2;
+    else if (align === 'right') x = el.x + el.width - tw;
+    else x = el.x + pad;
+    const baselineY = ph - el.y - ascent - i * lineH;
+    const opts = { x, y: baselineY, size: fs, font, color: col };
+    if (el.rotation) opts.rotate = PDFLib.degrees(el.rotation);
+    page.drawText(text, opts);
+  });
+}
+function drawRectPdf(page, el, ph) {
+  const s = el.style || {};
+  const fill = pdfColorOr(s.backgroundColor || s.color, PDFLib.rgb(1, 1, 1));
+  const bcol = pdfColor(s.borderColor || s.color);
+  const bw = num(s.borderWidth, 0);
+  const r = num(s.borderRadius, 0);
+  page.drawRectangle({
+    x: el.x, y: ph - el.y - el.height, width: el.width, height: el.height, color: fill,
+    borderColor: bcol || undefined, borderWidth: bcol ? bw : 0,
+    corners: r ? { tl: r, tr: r, br: r, bl: r } : undefined,
+  });
+}
+function drawEllipsePdf(page, el, ph) {
+  const s = el.style || {};
+  const fill = pdfColorOr(s.backgroundColor || s.color, PDFLib.rgb(0.8, 0.8, 0.8));
+  page.drawEllipse({ x: el.x + el.width / 2, y: ph - (el.y + el.height / 2), xScale: el.width / 2, yScale: el.height / 2, color: fill });
+}
+function drawLinePdf(page, el, ph) {
+  const s = el.style || {};
+  const col = pdfColorOr(s.color, PDFLib.rgb(0, 0, 0));
+  const t = num(s.borderWidth, num(s.thickness, 2));
+  page.drawLine({ start: { x: el.x, y: ph - el.y }, end: { x: el.x + el.width, y: ph - (el.y + el.height) }, thickness: t, color: col });
+}
+function drawArrowPdf(page, el, ph) {
+  const s = el.style || {};
+  const col = pdfColorOr(s.color, PDFLib.rgb(0.2, 0.2, 0.2));
+  const dir = (el.props && el.props.dir) || 'right';
+  const x = el.x, y = el.y, w = el.width, h = el.height, cy = y + h / 2;
+  let x2, y2, x1, y1, head;
+  if (dir === 'left') { x2 = x + w; y2 = cy; x1 = x + w * 0.3; y1 = cy; head = 'M ' + x1 + ' ' + (cy - 6) + ' L ' + x + ' ' + cy + ' L ' + x1 + ' ' + (cy + 6) + ' Z'; }
+  else if (dir === 'up') { x2 = x + w / 2; y2 = y + h; x1 = x + w / 2; y1 = y + h * 0.3; head = 'M ' + (x + w / 2 - 6) + ' ' + y1 + ' L ' + (x + w / 2) + ' ' + y + ' L ' + (x + w / 2 + 6) + ' ' + y1 + ' Z'; }
+  else if (dir === 'down') { x2 = x + w / 2; y2 = y; x1 = x + w / 2; y1 = y + h * 0.7; head = 'M ' + (x + w / 2 - 6) + ' ' + y1 + ' L ' + (x + w / 2) + ' ' + (y + h) + ' L ' + (x + w / 2 + 6) + ' ' + y1 + ' Z'; }
+  else { x2 = x; y2 = cy; x1 = x + w * 0.7; y1 = cy; head = 'M ' + x1 + ' ' + (cy - 6) + ' L ' + (x + w) + ' ' + cy + ' L ' + x1 + ' ' + (cy + 6) + ' Z'; }
+  page.drawLine({ start: { x: x2, y: ph - y2 }, end: { x: x1, y: ph - y1 }, thickness: 2, color: col });
+  page.drawPath({ path: head, color: col });
+}
+async function drawImagePdf(pdfDoc, page, el, ph) {
+  const src0 = (el.props && el.props.src) || '';
+  if (!src0 || !src0.startsWith('data:')) { await drawRasterPdf(pdfDoc, page, el, ph, 2); return; }
+  try {
+    const bytes = Uint8Array.from(atob(src0.split(',')[1]), c => c.charCodeAt(0));
+    let img;
+    if (src0.startsWith('data:image/png')) img = await pdfDoc.embedPng(bytes);
+    else if (src0.startsWith('data:image/jpeg') || src0.startsWith('data:image/jpg')) img = await pdfDoc.embedJpg(bytes);
+    else { await drawRasterPdf(pdfDoc, page, el, ph, 2); return; }
+    page.drawImage(img, { x: el.x, y: ph - el.y - el.height, width: el.width, height: el.height });
+  } catch (e) { await drawRasterPdf(pdfDoc, page, el, ph, 2); }
+}
+function transformPathD(d, sx, sy, tx, ty) {
+  return d.replace(/([MmLlHhVvCcSsQqTtAaZz])([^MmLlHhVvCcSsQqTtAaZz]*)/g, (mm, cmd, rest) => {
+    const nums = rest.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    const out = [cmd];
+    let i = 0;
+    const isRel = cmd === cmd.toLowerCase() && cmd !== 'Z' && cmd !== 'z';
+    const X = (v) => (isRel ? v * sx : v * sx + tx);
+    const Y = (v) => (isRel ? -v * sy : v * sy + ty);
+    switch (cmd.toUpperCase()) {
+      case 'M': case 'L': case 'T': while (i + 1 < nums.length) { out.push(X(nums[i]).toFixed(2), Y(nums[i + 1]).toFixed(2)); i += 2; } break;
+      case 'C': while (i + 5 < nums.length) { out.push(X(nums[i]).toFixed(2), Y(nums[i + 1]).toFixed(2), X(nums[i + 2]).toFixed(2), Y(nums[i + 3]).toFixed(2), X(nums[i + 4]).toFixed(2), Y(nums[i + 5]).toFixed(2)); i += 6; } break;
+      case 'S': case 'Q': while (i + 3 < nums.length) { out.push(X(nums[i]).toFixed(2), Y(nums[i + 1]).toFixed(2), X(nums[i + 2]).toFixed(2), Y(nums[i + 3]).toFixed(2)); i += 4; } break;
+      case 'H': while (i < nums.length) { out.push(X(nums[i]).toFixed(2)); i++; } break;
+      case 'V': while (i < nums.length) { out.push(Y(nums[i]).toFixed(2)); i++; } break;
+      case 'A': while (i + 6 < nums.length) { out.push(nums[i].toFixed(2), nums[i + 1].toFixed(2), nums[i + 2].toFixed(2), nums[i + 3], nums[i + 4], X(nums[i + 5]).toFixed(2), Y(nums[i + 6]).toFixed(2)); i += 7; } break;
+      case 'Z': break;
+    }
+    return out.join(' ');
+  });
+}
+function drawVectorPdf(pdfDoc, page, el, ph, pw) {
+  const svg = (el.props && el.props.svg) || '';
+  if (!svg) return;
+  const m = svg.match(/<svg[^>]*\bwidth="([\d.]+)"[^>]*\bheight="([\d.]+)"/);
+  const ow = m ? parseFloat(m[1]) : pw, oh = m ? parseFloat(m[2]) : ph;
+  const inner = svg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+  const sx = el.width / ow, sy = el.height / oh;
+  const tx = el.x, ty = ph - el.y - el.height;
+  const re = /<path\b[^>]*?>/gi;
+  let pm;
+  while ((pm = re.exec(inner)) !== null) {
+    const tag = pm[0];
+    const dM = tag.match(/\bd="([^"]*)"/i);
+    if (!dM) continue;
+    let fill = (tag.match(/\bfill="([^"]*)"/i) || [])[1];
+    if (!fill || fill === 'none' || fill === 'transparent') fill = '#000000';
+    try {
+      const d2 = transformPathD(dM[1], sx, sy, tx, ty);
+      page.drawPath({ path: d2, color: pdfColorOr(fill, PDFLib.rgb(0, 0, 0)) });
+    } catch (e) {}
+  }
+}
+async function drawRasterPdf(pdfDoc, page, el, ph, scale) {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:absolute;left:0;top:0;width:' + el.width + 'px;height:' + el.height + 'px;box-sizing:border-box;overflow:hidden;';
+  applyElementStyles(div, el);
+  div.innerHTML = renderElementContent(el);
+  div.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
+  div.querySelectorAll('.resize-handles,.rotate-handle,.selection-outline').forEach(e => e.remove());
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:absolute;left:-99999px;top:0;';
+  holder.appendChild(div); document.body.appendChild(holder);
+  try {
+    const canvas = await html2canvas(div, { scale: scale, backgroundColor: (el.style && parseColor(el.style.backgroundColor)) || '#ffffff', logging: false, useCORS: true });
+    const dataUrl = canvas.toDataURL('image/png');
+    const bytes = Uint8Array.from(atob(dataUrl.split(',')[1]), c => c.charCodeAt(0));
+    const img = await pdfDoc.embedPng(bytes);
+    page.drawImage(img, { x: el.x, y: ph - el.y - el.height, width: el.width, height: el.height });
+  } finally { holder.remove(); }
+}
+async function buildPageToPdf(pdfDoc, page, pageData, ph) {
+  const fonts = await ensurePdfFonts(pdfDoc);
+  if (pageData.bg && state.showBg) {
+    const bg = pageData.bg;
+    if (bg && bg.startsWith('data:')) {
+      try { const b = Uint8Array.from(atob(bg.split(',')[1]), c => c.charCodeAt(0)); const im = await pdfDoc.embedPng(b); page.drawImage(im, { x: 0, y: 0, width: pageData.w || PAGE_W, height: ph }); } catch (e) {}
+    }
+  }
+  for (const el of (pageData.elements || [])) {
+    if (el.visible === false) continue;
+    const t = el.type;
+    if (TEXT_TYPES.has(t)) drawTextPdf(page, el, ph, fonts);
+    else if (t === 'shape' || t === 'shape-rounded') drawRectPdf(page, el, ph);
+    else if (t === 'shape-circle') drawEllipsePdf(page, el, ph);
+    else if (t === 'divider' || t === 'line') drawLinePdf(page, el, ph);
+    else if (t === 'arrow') drawArrowPdf(page, el, ph);
+    else if (t === 'image') await drawImagePdf(pdfDoc, page, el, ph);
+    else if (t === 'vector') drawVectorPdf(pdfDoc, page, el, ph, pageData.w || PAGE_W);
+    else await drawRasterPdf(pdfDoc, page, el, ph, 3);
+  }
+}
+async function renderPdfDoc(pages, watermark) {
+  const pdfDoc = await PDFLib.PDFDocument.create();
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i];
     const pw = page.w || PAGE_W, ph = page.h || PAGE_H;
-    if (i > 0) pdf.addPage([pw, ph], pw > ph ? 'l' : 'p');
-    const svgStr = await buildPageSVG(page, scale, watermark);
-    const doc = new DOMParser().parseFromString(svgStr, 'image/svg+xml');
-    const svgEl = doc.documentElement;
-    const holder = document.createElement('div');
-    holder.style.cssText = 'position:absolute;left:-99999px;top:0;width:0;height:0;overflow:hidden;';
-    holder.appendChild(svgEl); document.body.appendChild(holder);
-    try {
-      await pdf.svg(svgEl, { x: 0, y: 0, width: pw, height: ph });
-    } catch (e) {
-      holder.remove();
-      console.error('矢量 PDF 转换失败', e);
-      throw new Error('矢量转换失败：' + (e && e.message ? e.message : e));
+    const pdfPage = pdfDoc.addPage([pw, ph]);
+    await buildPageToPdf(pdfDoc, pdfPage, page, ph);
+    if (watermark) {
+      pdfPage.drawText(watermark, {
+        x: pw / 2, y: ph / 2, size: Math.round(Math.min(pw, ph) / 10),
+        font: (await ensurePdfFonts(pdfDoc)).reg, color: PDFLib.rgb(0, 0, 0), rotate: PDFLib.degrees(-28), opacity: 0.1,
+      });
     }
-    holder.remove();
   }
-  const blob = pdf.output('blob');
-  if (handle) { await writeBlobToHandle(handle, blob); showToast('可编辑矢量 PDF 已保存 ✓', 'success'); }
-  else { fallbackDownload(blob, fname); showToast('PDF 已下载到默认文件夹（浏览器不支持自选路径）', 'success'); }
+  return pdfDoc;
+}
+async function exportPDF(pages, scale, watermark) {
+  const PDFLib = window.PDFLib;
+  if (!PDFLib) { showToast('PDF 引擎未加载，请刷新后重试', 'error'); return; }
+  if (!window.fontkit) { showToast('字体引擎未加载，请刷新后重试', 'error'); return; }
+  showToast('正在生成可编辑矢量 PDF（中文活文字）…', 'info');
+  const fname = exportBaseName() + '.pdf';
+  const handle = await pickSaveFile(fname, [{ description: 'PDF 文件', accept: { 'application/pdf': ['.pdf'] } }]);
+  if (handle === 'aborted') return;
+  try {
+    const pdfDoc = await renderPdfDoc(pages, watermark);
+    const bytes = await pdfDoc.save();
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    if (handle) { await writeBlobToHandle(handle, blob); showToast('可编辑矢量 PDF 已保存 ✓', 'success'); }
+    else { fallbackDownload(blob, fname); showToast('PDF 已下载到默认文件夹', 'success'); }
+  } catch (e) {
+    console.error('PDF 生成失败', e);
+    showToast('PDF 生成失败：' + (e && e.message ? e.message : e), 'error');
+  }
+}
+async function exportAI(pages, scale, watermark) {
+  const PDFLib = window.PDFLib;
+  if (!PDFLib || !window.fontkit) { showToast('引擎未加载，请刷新后重试', 'error'); return; }
+  showToast('正在生成 Illustrator AI 文件（可编辑）…', 'info');
+  const fname = exportBaseName() + '.ai';
+  const handle = await pickSaveFile(fname, [{ description: 'Illustrator 文件', accept: { 'application/illustrator': ['.ai'] } }]);
+  if (handle === 'aborted') return;
+  try {
+    const pdfDoc = await renderPdfDoc(pages, watermark);
+    const pdfBytes = await pdfDoc.save();
+    const last = pages[pages.length - 1] || {};
+    const pw = Math.round(last.w || PAGE_W), ph = Math.round(last.h || PAGE_H);
+    const header = '%!PS-Adobe-3.0\n%%Creator: Adobe Illustrator(R)\n%%AI8_CreatorVersion: 26.0\n%%Title: (' + exportBaseName() + ')\n%%BoundingBox: 0 0 ' + pw + ' ' + ph + '\n%%Pages: ' + pages.length + '\n%%DocumentData: Binary\n%%LanguageLevel: 2\n%%EndComments\n';
+    const aiBytes = new Uint8Array(header.length + pdfBytes.length);
+    for (let i = 0; i < header.length; i++) aiBytes[i] = header.charCodeAt(i);
+    aiBytes.set(pdfBytes, header.length);
+    const blob = new Blob([aiBytes], { type: 'application/illustrator' });
+    if (handle) { await writeBlobToHandle(handle, blob); showToast('AI 文件已保存 ✓', 'success'); }
+    else { fallbackDownload(blob, fname); showToast('AI 已下载到默认文件夹', 'success'); }
+  } catch (e) {
+    console.error('AI 生成失败', e);
+    showToast('AI 生成失败：' + (e && e.message ? e.message : e), 'error');
+  }
 }
 
-// 可编辑矢量 SVG（Illustrator 最原生格式）
 async function exportSVG(pages, scale, watermark) {
   showToast('正在生成矢量 SVG…', 'info');
   if (pages.length > 1) {
@@ -6078,7 +6304,7 @@ async function exportWord(pages, watermark) {
 
 async function confirmExport() {
   const format = state.selectedExportFormat;
-  const names = { pdf: 'PDF', word: 'Word', excel: 'Excel', ppt: 'PPT', html: 'HTML', image: '图片', svg: 'SVG' };
+  const names = { pdf: 'PDF', ai: 'AI', word: 'Word', excel: 'Excel', ppt: 'PPT', html: 'HTML', image: '图片', svg: 'SVG' };
   const allPages = document.getElementById('expAllPages') ? document.getElementById('expAllPages').checked : true;
   const watermarkOn = document.getElementById('expWatermark') ? document.getElementById('expWatermark').checked : false;
   const scale = parseInt(document.getElementById('expScale') ? document.getElementById('expScale').value : '3', 10) || 3;
@@ -6093,6 +6319,8 @@ async function confirmExport() {
       await exportPDF(pages, scale, watermark);
     } else if (format === 'svg') {
       await exportSVG(pages, scale, watermark);
+    } else if (format === 'ai') {
+      await exportAI(pages, scale, watermark);
     } else if (format === 'image') {
       await exportImages(pages, scale, watermark);
     } else if (format === 'html') {
