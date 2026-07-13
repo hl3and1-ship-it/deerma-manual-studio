@@ -11,8 +11,7 @@
   <script src="vendor/html2canvas.min.js"></script>
   <!-- opentype.js：SVG 导出时把含中文文字转矢量轮廓，确保 Illustrator 中可编辑且中文正确显示 -->
   <script src="vendor/opentype.min.js"></script>
-  <!-- fontkit：pdf-lib 嵌入自定义（中文）字体所需 -->
-  <script src="vendor/fontkit.umd.js"></script>
+  <!-- fontkit：pdf-lib 嵌入自定义（中文）字体所需（仅加载一次，重复加载会导致字体编码崩溃） -->
   <script src="vendor/pdf-lib.min.js"></script>
   <script src="vendor/fontkit.umd.js"></script>
   <!-- Tesseract.js 纯前端 OCR 引擎：用于识别扫描件/图片型 PDF 的文字，无需 API Key -->
@@ -5988,8 +5987,8 @@ async function ensurePdfFonts(pdfDoc) {
     const regBytes = await getCjkFontBytes('regular');
     const boldBytes = await getCjkFontBytes('bold');
     cache = {
-      reg: await pdfDoc.embedFont(regBytes, { subset: true }),
-      bold: await pdfDoc.embedFont(boldBytes, { subset: true }),
+      reg: await pdfDoc.embedFont(regBytes, { subset: false }),
+      bold: await pdfDoc.embedFont(boldBytes, { subset: false }),
     };
     _pdfEmbedCache.set(pdfDoc, cache);
   }
