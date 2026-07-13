@@ -6025,20 +6025,42 @@ function drawTextPdf(page, el, ph, fonts) {
   const lh = num(s.lineHeight, 1.2);
   const align = s.textAlign || 'left';
   const pad = num(s.padding, 0);
+  const ls = num(s.letterSpacing, 0);  // 支持 letter-spacing
   const lineH = fs * lh;
   const lines = String(el.content == null ? '' : el.content).split('\n');
   const ascent = fs * 0.82;
   lines.forEach((ln, i) => {
     const text = ln.length ? ln : ' ';
-    const tw = font.widthOfTextAtSize(text, fs);
-    let x;
-    if (align === 'center') x = el.x + (el.width - tw) / 2;
-    else if (align === 'right') x = el.x + el.width - tw;
-    else x = el.x + pad;
     const baselineY = ph - el.y - ascent - i * lineH;
-    const opts = { x, y: baselineY, size: fs, font, color: col };
-    if (el.rotation) opts.rotate = PDFLib.degrees(el.rotation);
-    page.drawText(text, opts);
+    if (ls > 0.5) {
+      // letterSpacing 较大时逐字绘制（pdf-lib 不原生支持）
+      let cx;
+      if (align === 'center') {
+        const totalW = text.split('').reduce((sum, ch) => sum + font.widthOfTextAtSize(ch, fs) + ls, -ls);
+        cx = el.x + (el.width - totalW) / 2;
+      } else if (align === 'right') {
+        const totalW = text.split('').reduce((sum, ch) => sum + font.widthOfTextAtSize(ch, fs) + ls, -ls);
+        cx = el.x + el.width - totalW;
+      } else {
+        cx = el.x + pad;
+      }
+      for (const ch of text) {
+        const opts = { x: cx, y: baselineY, size: fs, font, color: col };
+        if (el.rotation) opts.rotate = PDFLib.degrees(el.rotation);
+        page.drawText(ch, opts);
+        cx += font.widthOfTextAtSize(ch, fs) + ls;
+      }
+    } else {
+      // 无 letterSpacing 或很小时直接绘制（性能更好）
+      const tw = font.widthOfTextAtSize(text, fs);
+      let x;
+      if (align === 'center') x = el.x + (el.width - tw) / 2;
+      else if (align === 'right') x = el.x + el.width - tw;
+      else x = el.x + pad;
+      const opts = { x, y: baselineY, size: fs, font, color: col };
+      if (el.rotation) opts.rotate = PDFLib.degrees(el.rotation);
+      page.drawText(text, opts);
+    }
   });
 }
 function drawRectPdf(page, el, ph) {
@@ -6085,10 +6107,135 @@ async function drawImagePdf(pdfDoc, page, el, ph) {
     let img;
     if (src0.startsWith('data:image/png')) img = await pdfDoc.embedPng(bytes);
     else if (src0.startsWith('data:image/jpeg') || src0.startsWith('data:image/jpg')) img = await pdfDoc.embedJpg(bytes);
+    else if (src0.startsWith('data:image/svg+xml')) {
+      // SVG → Canvas → PNG 转换（pdf-lib 不直接支持嵌入 SVG）
+      const pngBytes = await svgToPngBytes(src0, el.width, el.height);
+      if (pngBytes) img = await pdfDoc.embedPng(pngBytes);
+      else { await drawRasterPdf(pdfDoc, page, el, ph, 2); return; }
+    }
     else { await drawRasterPdf(pdfDoc, page, el, ph, 2); return; }
     page.drawImage(img, { x: el.x, y: ph - el.y - el.height, width: el.width, height: el.height });
   } catch (e) { await drawRasterPdf(pdfDoc, page, el, ph, 2); }
 }
+
+/**
+ * 将 SVG data URL 转为 PNG 字节（通过 Image + Canvas 栅格化）
+ * @param {string} svgDataUrl - data:image/svg+xml;base64,... 
+ * @param {number} w - 目标宽度 px
+ * @param {number} h - 目标高度 px
+ * @returns {Promise<Uint8Array|null>}
+ */
+async function svgToPngBytes(svgDataUrl, w, h) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        // 使用 2x 或 3x 分辨率保证清晰度，但限制最大尺寸避免 OOM
+        const dpr = Math.min(3, Math.max(1, Math.round(Math.max(w, h) > 512 ? 2 : 3)));
+        c.width = Math.round(w * dpr);
+        c.height = Math.round(h * dpr);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob((blob) => {
+          if (!blob) { resolve(null); return; }
+          blob.arrayBuffer().then(buf => resolve(new Uint8Array(buf))).catch(() => resolve(null));
+        }, 'image/png');
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = svgDataUrl;
+  });
+}
+// ---- 表格绘制（带边框网格）----
+function drawTablePdf(pdfDoc, page, el, ph, fonts) {
+  const s = el.style || {};
+  const rows = num(el.props && el.props.rows, 3);
+  const cols = num(el.props && el.props.cols, 3);
+  const data = (el.props && el.props.data) || [];
+  const hasHeader = (el.props && el.props.hasHeader) !== false;
+  const fill = pdfColorOr(s.backgroundColor || '#ffffff', PDFLib.rgb(1, 1, 1));
+  const bcol = pdfColor(s.borderColor || '#cccccc');
+  const bw = Math.max(0.5, num(s.borderWidth, 0.8));
+
+  // 背景填充
+  page.drawRectangle({ x: el.x, y: ph - el.y - el.height, width: el.width, height: el.height, color: fill });
+
+  const cellW = el.width / cols;
+  const cellH = el.height / rows;
+
+  // 绘制表格线
+  for (let r = 0; r <= rows; r++) {
+    const ly = ph - el.y - r * cellH;
+    page.drawLine({ start: { x: el.x, y: ly }, end: { x: el.x + el.width, y: ly }, thickness: bw, color: bcol });
+  }
+  for (let c = 0; c <= cols; c++) {
+    const lx = el.x + c * cellW;
+    page.drawLine({ start: { x: lx, y: ph - el.y }, end: { x: lx, y: ph - el.y - el.height }, thickness: bw, color: bcol });
+  }
+
+  // 绘制单元格文字
+  const fs = Math.max(6, Math.min(cellH * 0.4, cellW * 0.18));
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const val = (data[r] && data[r][c] !== undefined && data[r][c] !== null) ? String(data[r][c])
+        : (hasHeader && r === 0 ? '标题' + (c + 1) : '');
+      if (!val) continue;
+      const cx = el.x + c * cellW + 2;
+      const cy = ph - el.y - (r + 1) * cellH + cellH * 0.15;
+      const font = (hasHeader && r === 0) ? fonts.bold : fonts.reg;
+      const col = pdfColorOr((hasHeader && r === 0) ? (s.color || '#333333') : s.color, PDFLib.rgb(0.2, 0.2, 0.2));
+      try { page.drawText(val, { x: cx, y: cy, size: fs, font, color: col }); } catch(e) {}
+    }
+  }
+}
+
+// ---- 图标绘制（FontAwesome → 栅格化嵌入）----
+async function drawIconPdf(pdfDoc, page, el, ph) {
+  // 图标用 html2canvas 栅格化后嵌入（FontAwesome 字体图标无法直接转矢量）
+  await drawRasterPdf(pdfDoc, page, el, ph, 3);
+}
+
+// ---- 二维码绘制（SVG → PNG 嵌入）----
+async function drawQrcodePdf(pdfDoc, page, el, ph) {
+  const p = el.props || {};
+  const label = p.label || '';
+  // 复用 renderQRCode 的 SVG 生成逻辑生成二维码 SVG
+  let seed = 0; const txt = (p.text || '') + '';
+  for (let i = 0; i < txt.length; i++) seed = (seed * 31 + txt.charCodeAt(i)) & 0xffffffff;
+  const N = 21; let rects = '';
+  let s = Math.abs(seed) || 12345;
+  const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+  const isFinder = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= N - 7) || (r >= N - 7 && c < 7);
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (isFinder(r, c)) continue;
+    if (rnd() > 0.5) rects += `<rect x="${c}" y="${r}" width="1" height="1"/>`;
+  }
+  const finder = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7" fill="#111"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#111"/>`;
+  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${N} ${N}" shape-rendering="crispEdges"><rect width="${N}" height="${N}" fill="#fff"/><g fill="#111">${rects}</g>${finder(0,0)}${finder(N-7,0)}${finder(0,N-7)}</svg>`;
+  const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
+
+  // 将 QR 码区域作为正方形嵌入
+  const qrSize = Math.min(el.width, el.height * 0.85);
+  const qrX = el.x + (el.width - qrSize) / 2;
+  const qrY = el.y;
+
+  try {
+    const pngBytes = await svgToPngBytes(svgDataUrl, qrSize, qrSize);
+    if (pngBytes) {
+      const img = await pdfDoc.embedPng(pngBytes);
+      page.drawImage(img, { x: qrX, y: ph - qrY - qrSize, width: qrSize, height: qrSize });
+    }
+  } catch(e) {}
+
+  // 绘制标签文字
+  if (label) {
+    const lblFs = Math.max(7, el.height * 0.12);
+    const lblY = ph - qrY - qrSize - lblFs - 2;
+    try { page.drawText(label, { x: el.x, y: lblY, size: lblFs, font: fonts.reg || (await ensurePdfFonts(pdfDoc)).reg, color: PDFLib.rgb(0.5, 0.5, 0.5) }); } catch(e) {}
+  }
+}
+
 function transformPathD(d, sx, sy, tx, ty) {
   return d.replace(/([MmLlHhVvCcSsQqTtAaZz])([^MmLlHhVvCcSsQqTtAaZz]*)/g, (mm, cmd, rest) => {
     const nums = rest.trim().split(/[\s,]+/).filter(Boolean).map(Number);
@@ -6167,6 +6314,10 @@ async function buildPageToPdf(pdfDoc, page, pageData, ph) {
     else if (t === 'arrow') drawArrowPdf(page, el, ph);
     else if (t === 'image') await drawImagePdf(pdfDoc, page, el, ph);
     else if (t === 'vector') drawVectorPdf(pdfDoc, page, el, ph, pageData.w || PAGE_W);
+    else if (t === 'table' || t === 'specs-table') drawTablePdf(pdfDoc, page, el, ph, fonts);
+    else if (t === 'qrcode') await drawQrcodePdf(pdfDoc, page, el, ph);
+    else if (t === 'icon') await drawIconPdf(pdfDoc, page, el, ph);
+    else if (t === 'figure') await drawImagePdf(pdfDoc, page, el, ph);  // figure 含图片，复用 image 逻辑
     else await drawRasterPdf(pdfDoc, page, el, ph, 3);
   }
 }
