@@ -5,7 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>说明书制作平台 v1.3</title>
   <meta name="app-version" content="1.3">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- FontAwesome 6 图标库：主源 bootcdn(国内稳定) + 回退 cdnjs.cloudflare -->
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha384-BY+fdrpOdNBgCcsBxYGkaQrWJjNGc0b+nyR5G3y9nLhN48RxOqA3kEFVAB7vXk2w" crossorigin="anonymous">
+  <script>
+    // FA6 字体加载检测：若主CDN失败，回退到备用CDN
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        var testEl = document.createElement('i');
+        testEl.className = 'far fa-check';
+        testEl.style.cssText = 'position:absolute;left:-9999px;';
+        document.body.appendChild(testEl);
+        var w = testEl.offsetWidth;
+        document.body.removeChild(testEl);
+        if (w === 0) {
+          console.warn('[FA] 主CDN字体未加载，尝试备用...');
+          var f = document.createElement('link');
+          f.rel = 'stylesheet';
+          f.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+          document.head.appendChild(f);
+        }
+      }, 3000);
+    });
+  </script>
   <script src="vendor/pdf.min.js"></script>
   <!-- v1.3 导出引擎：pdf-lib 生成可编辑矢量 PDF（中文为 CID 活文字 + ToUnicode，Illustrator 可改字） + html2canvas 栅格（PNG/HTML/Word 用） -->
   <script src="vendor/html2canvas.min.js"></script>
