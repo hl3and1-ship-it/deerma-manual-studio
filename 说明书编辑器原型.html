@@ -67,19 +67,20 @@
       --icon-hover: var(--accent);
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    /* ── 图标系统：fas 实心 → CSS 细线框风格 ──
-       原理：-webkit-text-stroke 描边 + transparent fill = 线框效果
-       FA6 Free 的 far 变体极少，故全部用 fas + CSS 转线框 */
+    /* ── 图标系统：fas 实心 → 精致细线框风格 ──
+       原理：-webkit-text-stroke 细描边 + fill = 线框效果（参考计算器SVG风格）
+       FA6 Free 的 far 变体极少，故全部用 fas + CSS 转线框
+       参数：0.65px 描边 + 0.85 不透明度 = 精致轻盈 */
     i.fas {
       color: var(--icon-default);
       transition: color 0.15s;
-      -webkit-text-stroke: 1.15px currentColor;
-      /* Safari/Chrome: 用 stroke 描轮廓 */
+      -webkit-text-stroke: 0.65px currentColor;
       paint-order: stroke fill;
-      /* 确保 stroke 在 fill 之上 */
+      opacity: 0.85;
     }
+    i.fas:hover { opacity: 1; }
     @supports not (-webkit-text-stroke: 1px currentColor) {
-      i.fas { opacity: 0.7; } /* 降级：不支持 stroke 时降低不透明度 */
+      i.fas { opacity: 0.55; } /* 降级：不支持 stroke 时更淡 */
     }
     i.far, i.fab, i.fal { color: var(--icon-default); transition: color 0.15s; }
     /* ── 例外：需要保持实心的图标（弹窗、状态指示等）── */
