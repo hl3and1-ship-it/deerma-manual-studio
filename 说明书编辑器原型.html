@@ -37,6 +37,8 @@
   <script src="vendor/fontkit.umd.js"></script>
   <!-- Tesseract.js 纯前端 OCR 引擎：用于识别扫描件/图片型 PDF 的文字，无需 API Key -->
   <script src="https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <!-- 安规模版1 模板数据（矢量图形层 + 可编辑文字元素，PyMuPDF 提取） -->
+  <script src="images/anquigui_v1_data.js"></script>
   <style>
     :root {
       --bg-primary: #ffffff;
@@ -230,13 +232,18 @@
       display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px;
     }
     .catalog-card {
-      background: #fff; border-radius: 14px; border: 1px solid var(--border-light);
+      background: #fff; border-radius: 14px;
       overflow: hidden; cursor: pointer; transition: all 0.2s ease;
       box-shadow: 0 1px 3px rgba(15,23,42,0.04); position: relative;
+      border: 1px solid transparent;
+      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #e0d4f5, #c4b5fd, #ddd6fe);
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
     }
     .catalog-card:hover {
-      border-color: var(--accent-border); transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(139,92,246,0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139,92,246,0.12);
+      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #d4c4ef, #b794f6, #c4b5fd);
     }
     .catalog-card-preview {
       height: 180px; background: #fafafa; display: flex; align-items: center; justify-content: center;
@@ -261,14 +268,14 @@
 
     .fab-new {
       position: fixed; bottom: 40px; right: 44px; z-index: 10001;
-      background: var(--accent); color: #fff; border: none; border-radius: 14px;
+      background: linear-gradient(135deg, #e0d4f5 0%, #f0ebfa 50%, #f5f0fc 100%); color: #1a1a2e; border: none; border-radius: 14px;
       padding: 13px 26px; font-size: 14px; font-weight: 600; cursor: pointer;
-      box-shadow: 0 4px 20px rgba(139,92,246,0.35), 0 0 40px rgba(139,92,246,0.12);
+      box-shadow: 0 4px 20px rgba(139,92,246,0.18), 0 0 40px rgba(139,92,246,0.08);
       display: flex; align-items: center; gap: 8px; transition: all 0.25s ease;
     }
-    .fab-new:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(139,92,246,0.45), 0 0 56px rgba(139,92,246,0.18); }
+    .fab-new:hover { transform: translateY(-2px); background: linear-gradient(135deg, #d4c4ef 0%, #e8dff8 50%, #ede4f9 100%); box-shadow: 0 8px 28px rgba(139,92,246,0.25), 0 0 56px rgba(139,92,246,0.12); }
     .fab-new:active { transform: translateY(0); }
-    .fab-new i { color: #fff; font-size: 16px; }
+    .fab-new i { color: #7c3aed; font-size: 16px; }
 
     /* ===== Modal ===== */
     .modal-overlay {
@@ -607,8 +614,8 @@
     }
     .btn-outline { background: transparent; border:1px solid var(--border-color); color: var(--text-secondary); }
     .btn-outline:hover { border-color: var(--accent-border); background: var(--accent-light); color: var(--accent); }
-    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); box-shadow: 0 4px 16px rgba(139,92,246,0.35); }
+    .btn-primary { background: linear-gradient(135deg, #e0d4f5 0%, #f0ebfa 50%, #f5f0fc 100%); color: #1a1a2e; border-color: rgba(139,92,246,0.25); }
+    .btn-primary:hover { background: linear-gradient(135deg, #d4c4ef 0%, #e8dff8 50%, #ede4f9 100%); border-color: rgba(139,92,246,0.4); box-shadow: 0 4px 16px rgba(139,92,246,0.2); }
     .btn-danger { background: var(--danger); color:#fff; border-color: var(--danger); }
     .btn-sm { padding: 4px 12px; font-size: 12px; }
 
@@ -803,7 +810,7 @@
     .page-thumb:hover { border-color:var(--accent-border); box-shadow:0 2px 8px rgba(0,0,0,0.08); }
     .page-thumb.active { border-color:var(--accent); box-shadow:0 2px 14px rgba(139,92,246,0.25); }
     .page-thumb-canvas {
-      width:100%; aspect-ratio:210/297; background:#fff; position:relative;
+      width:100%; background:#fff; position:relative;
       overflow:hidden; pointer-events:none;
     }
     .page-thumb-canvas img { width:100%; height:100%; object-fit:contain; }
@@ -1012,8 +1019,10 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       border:1px solid #a8d4b8;
     }
-    /* When background image (imported PDF page) is hidden for clean editing */
+    /* When background image (imported PDF/SVG page) is hidden for clean editing */
     .canvas-page.hide-bg { background-image:none !important; }
+    .canvas-page.hide-bg .canvas-bg-img { display:none !important; }
+    .canvas-page.hide-bg .canvas-bg-svg { display:none !important; }
 
     /* Canvas Elements */
     .canvas-element {
@@ -1567,15 +1576,6 @@
       <div class="np-template-section" id="npTemplateSection">
         <label class="np-label">选择模板 <span class="np-optional">（可选，也可创建空白文档后自行设计）</span></label>
         <div class="type-select-grid np-tpl-grid" id="npTplGrid">
-          <!-- 彩色类 -->
-          <div class="type-select-card np-tpl-card" data-type="color" data-tpl="catalog-hero" onclick="selectNpTemplate(this)">
-            <div class="template-sub-preview"><img src="images/fig_page1.png" alt="封面 A"></div>
-            <div class="template-sub-info"><h5>产品目录封面 A</h5><span>双开折页 285×210mm · Z50 COMBO</span></div>
-          </div>
-          <div class="type-select-card np-tpl-card" data-type="color" data-tpl="catalog-compact" onclick="selectNpTemplate(this)">
-            <div class="template-sub-preview"><img src="images/fig_page2.png" alt="封面 B"></div>
-            <div class="template-sub-info"><h5>X10 吸尘器产品目录</h5><span>双开折页 285×210mm · X10</span></div>
-          </div>
           <!-- 安规类 -->
           <div class="type-select-card np-tpl-card" data-type="safety" data-tpl="gt15x-safety" onclick="selectNpTemplate(this)">
             <div class="template-sub-preview" style="display:flex;flex-direction:column;gap:5px;padding:12px;background:#fafbfc;">
@@ -1598,6 +1598,11 @@
               <i class="ti ti-shield" style="font-size:36px;"></i>
             </div>
             <div class="template-sub-info"><h5>安规说明书模板</h5><span>警告+合规结构化布局</span></div>
+          </div>
+          <!-- 安规模版1（SVG矢量模板 · 1:1还原 · 品牌字体） -->
+          <div class="type-select-card np-tpl-card" data-type="safety" data-tpl="anquigui-v1" onclick="selectNpTemplate(this)">
+            <div class="template-sub-preview"><img src="images/anquigui_preview.png" alt="安规模版1"></div>
+            <div class="template-sub-info"><h5>安规模版1</h5><span>双折页 291×216mm · 英文+多语言 · 3页SVG矢量</span></div>
           </div>
           <!-- 空白 -->
           <div class="type-select-card np-tpl-card selected" data-type="" data-tpl="blank" onclick="selectNpTemplate(this)">
@@ -3356,13 +3361,42 @@ function renderElements() {
   canvas.style.height = ph + 'px';
   canvas.style.borderRadius = (page.borderRadius || 0) + 'px';
   canvas.style.overflow = 'hidden';
-  // Apply imported PDF background image (preserves original layout)
-  if (page.bg) {
+  // Apply imported PDF/SVG background image (preserves original layout)
+  // Priority: bgSvg (inline SVG DOM) > CSS background-image > <img> fallback
+  let bgImg = canvas.querySelector('.canvas-bg-img');
+  let bgSvgEl = canvas.querySelector('.canvas-bg-svg');
+  
+  if (page.bgSvg && state.showBg !== false) {
+    // ★ Inline SVG: create real <svg> DOM element — most reliable rendering
+    if (!bgSvgEl) {
+      bgSvgEl = document.createElement('div');
+      bgSvgEl.className = 'canvas-bg-svg';
+      bgSvgEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;';
+      canvas.insertBefore(bgSvgEl, canvas.firstChild);
+    }
+    bgSvgEl.innerHTML = page.bgSvg;
+    bgSvgEl.style.display = '';
+    // Hide img/css bg when using inline svg
+    if (bgImg) bgImg.style.display = 'none';
+    canvas.style.backgroundImage = 'none';
+  } else if (page.bg && state.showBg !== false) {
+    // Fallback: CSS background-image + <img> dual layer
     canvas.style.backgroundImage = `url(${page.bg})`;
     canvas.style.backgroundSize = '100% 100%';
     canvas.style.backgroundRepeat = 'no-repeat';
+    if (bgSvgEl) { bgSvgEl.style.display = 'none'; }
+    if (!bgImg) {
+      bgImg = document.createElement('img');
+      bgImg.className = 'canvas-bg-img';
+      bgImg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:0;';
+      canvas.insertBefore(bgImg, canvas.firstChild);
+    }
+    bgImg.src = page.bg;
+    bgImg.style.display = '';
   } else {
     canvas.style.backgroundImage = 'none';
+    if (bgImg) { bgImg.style.display = 'none'; }
+    if (bgSvgEl) { bgSvgEl.style.display = 'none'; }
   }
   // Keep background-visibility toggle in sync with user preference
   canvas.classList.toggle('hide-bg', state.showBg === false);
@@ -5340,6 +5374,8 @@ function renderPageThumbnail(pageIdx) {
   if (!container) return;
   const page = state.pages[pageIdx];
   const pw = page.w || PAGE_W, ph = page.h || PAGE_H;
+  // 动态设置容器宽高比，适配双折页/三折页等非标准尺寸
+  container.style.aspectRatio = pw + '/' + ph;
   // Scale to fit thumbnail container using the page's own dimensions
   const thumbW = container.clientWidth || 170;
   const scale = thumbW / pw;
@@ -6841,14 +6877,17 @@ async function importPDF(file) {
           const str = it.str.replace(/\s+$/, '');
           let fill = '#222222', best = 1e9;
           colorSamples.forEach(s => { const d = (s.cx - xPt) ** 2 + (s.cy - yTopPt) ** 2; if (d < best) { best = d; fill = s.fill; } });
-          const wEst = Math.max(20, str.length * fsPx * 0.56);
-          const hEst = Math.max(fsPx * 1.25, 14);
+          // 宽度估算：CJK字符≈1em宽，拉丁字母≈0.6em；用 0.7 系数兜底 + whiteSpace nowrap 防折行
+          const cjkCount = (str.match(/[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/g) || []).length;
+          const otherLen = str.length - cjkCount;
+          const wEst = Math.max(30, cjkCount * fsPx + otherLen * fsPx * 0.62);
+          const hEst = Math.max(fsPx * 1.3, 16);
           textEls.push({
             id: 'p' + i + 't' + (z++), type: 'text',
             x: Math.round(xPx), y: Math.round(yPx - fsPx),
             width: Math.round(wEst), height: Math.round(hEst),
             rotation: 0, visible: true, locked: false,
-            style: { fontSize: Math.round(fsPx) + 'px', color: fill, fontFamily: 'inherit', fontWeight: 'normal', fontStyle: 'normal', textDecoration: 'none', textAlign: 'left', lineHeight: '1.2', padding: '0px', backgroundColor: 'transparent', opacity: 1 },
+            style: { fontSize: Math.round(fsPx) + 'px', color: fill, fontFamily: 'inherit', fontWeight: 'normal', fontStyle: 'normal', textDecoration: 'none', textAlign: 'left', lineHeight: '1.2', padding: '0px', backgroundColor: 'transparent', opacity: 1, whiteSpace: 'nowrap' },
             content: str
           });
         });
@@ -7313,11 +7352,16 @@ function importAsImageFile(file) {
   reader.readAsDataURL(file);
 }
 
-// Toggle the imported PDF background image visibility (for clean text editing)
+// Toggle the imported PDF/SVG background image visibility (for clean text editing)
 function toggleBg() {
   state.showBg = !state.showBg;
   const cp = document.getElementById('canvasPage');
   if (cp) cp.classList.toggle('hide-bg', !state.showBg);
+  // Also toggle all bg layers
+  const bgImg = cp && cp.querySelector('.canvas-bg-img');
+  const bgSvg = cp && cp.querySelector('.canvas-bg-svg');
+  if (bgImg) bgImg.style.display = state.showBg ? '' : 'none';
+  if (bgSvg) bgSvg.style.display = state.showBg ? '' : 'none';
   const btn = document.getElementById('bgToggleBtn');
   if (btn) btn.classList.toggle('active', state.showBg);
 }
@@ -7694,6 +7738,7 @@ function confirmCreateProject() {
     else if (tpl === 'safety') applySafetyTemplate();
     else if (tpl === 'gt15x-safety') applyGt15xSafetyTemplate();
     else if (tpl === 'deerma-standard' || tpl === 'deerma-std') applyDeermaStandardTemplate();
+    else if (tpl === 'anquigui-v1') applyAnquiGuiV1Template();
   }
 
   if (_npPdfFile) {
@@ -8623,6 +8668,62 @@ function applyCatalogCompactTemplate() {
     updateSaveStatus();
     showToast('X10 吸尘器产品目录（双开折页）已创建', 'success');
   }, 400);
+}
+
+// ============================
+//  安规模版1 模板（矢量图形层 + 可编辑文字 · 1:1还原）
+//  数据来源：images/anquigui_v1_data.js (PyMuPDF 提取)
+//  架构：每页 = [vectorArt(锁定,100%图形) + N个可编辑text元素]
+//  与 importPDF 矢量模式完全一致的结构
+// ============================
+
+function applyAnquiGuiV1Template() {
+  if (!window.ANQUIGUI_V1_DATA) { showToast('模板数据未加载，请刷新重试', 'error'); return; }
+  if (typeof hideEntryScreen === 'function') hideEntryScreen();
+
+  const tplData = window.ANQUIGUI_V1_DATA;
+  const firstPg = tplData.pages[0];
+
+  // 使用 PDF 原始真实尺寸（291×216mm @150dpi），不强制改尺寸
+  const PW = firstPg.w;
+  const PH = firstPg.h;
+  window.PAGE_W = PW;
+  window.PAGE_H = PH;
+
+  if (state.projectSettings) {
+    state.projectSettings.pageW_mm = firstPg.wmm || 291;
+    state.projectSettings.pageH_mm = firstPg.hmm || 216;
+    state.projectSettings.sizeTpl = 'anquigui-v1';
+    state.projectSettings.pageW = PW;
+    state.projectSettings.pageH = PH;
+  }
+
+  // 从外部数据构建页面：每页 = [vectorArt(全页图形) + 可编辑文字元素]
+  state.pages = tplData.pages.map((pg, i) => ({
+    id: 'p' + (i + 1),
+    name: pg.name,
+    w: pg.w,
+    h: pg.h,
+    bg: null,          // 无栅格底图 — 图形在 vector 层
+    borderRadius: 2,
+    elements: [...pg.elements],  // [vectorArt, ...textElements]
+  }));
+
+  state.currentPageIdx = 0;
+  state.selectedIds = [];
+  state.primarySelectedId = null;
+  state.showBg = false;   // 矢量模式无底图
+
+  renderElements();
+  renderPagesList();
+  updatePropsPanel();
+  fitToWindow();
+
+  pushHistory('应用安规模版1模板（矢量图形 + 可编辑文字 · 3页）');
+  updateSaveStatus();
+
+  const totalTexts = state.pages.reduce((s, p) => s + p.elements.filter(e => e.type === 'text').length, 0);
+  showToast('安规模版1已加载（' + tplData.pages.length + '页 ' + firstPg.wmm + '×' + firstPg.hmm + 'mm · ' + totalTexts + '个可编辑文字块）', 'success');
 }
 
 
