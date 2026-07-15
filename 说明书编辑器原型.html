@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>说明书制作平台 v1.3</title>
-  <meta name="app-version" content="1.3">
+  <title>说明书制作平台 v1.4</title>
+  <meta name="app-version" content="1.4">
   <!-- FontAwesome 6 图标库：主源 bootcdn(国内稳定) + 回退 cdnjs.cloudflare -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css">
   <script>
@@ -2900,7 +2900,7 @@ const menuData = {
   help: [
     { icon: 'question-circle', label: '使用帮助', shortcut: 'F1', action: () => showToast('帮助: 拖拽组件到画布，点击编辑文字；空白处拖拽可框选，Shift/Ctrl+点击或Shift+框选可多选', 'info', 5000) },
     { icon: 'keyboard', label: '快捷键', shortcut: '', action: () => showToast('Ctrl+Z撤销, Ctrl+C复制, Ctrl+V粘贴, Delete删除, Ctrl+D克隆, Ctrl/Cmd+滚轮缩放, Ctrl+0适应窗口', 'info', 5000) },
-    { icon: 'info-circle', label: '关于 DocuStudio', shortcut: '', action: () => showToast('DocuStudio v1.3 - 说明书制作系统', 'info') },
+    { icon: 'info-circle', label: '关于 DocuStudio', shortcut: '', action: () => showToast('DocuStudio v1.4 - 说明书制作系统', 'info') },
   ],
 };
 
@@ -6543,7 +6543,7 @@ async function exportAI(pages, scale, watermark) {
     var headerLines = [
       '%!PS-Adobe-3.0',
       '%&Boolean finished',
-      '%%Creator: ManualStudio v1.3',
+      '%%Creator: ManualStudio v1.4',
       '%&AI8_CreatorVersion: 26.0',
       '%%For: ',
       '%%Title: (' + title + ')',
