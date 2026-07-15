@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>表格模版测试台 · 说明书编辑器</title>
+<!-- Tabler Icons（仅装饰，无网络时不影响功能） -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --accent:#8b5cf6;
+    --accent-light:#ede4f9;
+    --text-primary:#1a1a2e;
+    --text-secondary:#475569;
+    --text-muted:#94a3b8;
+    --border-color:#e5e7eb;
+    --border-light:#eef0f3;
+    --bg-secondary:#f8fafc;
+    --bg-tertiary:#f1f5f9;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:#f4f5f7;color:var(--text-primary);}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 60px;}
+  h1{font-size:22px;margin:0 0 4px;}
+  .sub{color:var(--text-secondary);font-size:13px;margin-bottom:24px;}
+  .panel{background:#fff;border:1px solid var(--border-color);border-radius:14px;padding:20px 22px;margin-bottom:20px;}
+  .panel h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .panel h2 .tag{font-size:11px;font-weight:500;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:10px;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;border-radius:10px;
+    padding:11px 20px;font-size:14px;font-weight:600;transition:all .15s;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{opacity:.92;}
+  .btn-ghost{background:var(--bg-secondary);color:var(--text-secondary);}
+  .btn-ghost:hover{background:var(--bg-tertiary);}
+  .comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .comp-card{border:1px solid var(--border-color);border-radius:12px;padding:16px;cursor:pointer;transition:all .15s;background:#fff;}
+  .comp-card:hover{border-color:var(--accent);box-shadow:0 6px 20px rgba(139,92,246,.1);}
+  .comp-card .ic{font-size:22px;color:var(--accent);margin-bottom:8px;}
+  .comp-card .nm{font-size:14px;font-weight:600;}
+  .comp-card .ds{font-size:11px;color:var(--text-muted);margin-top:3px;}
+  .result-empty{color:var(--text-muted);font-size:13px;padding:24px;text-align:center;border:1px dashed var(--border-color);border-radius:10px;}
+  .preview-table{border-collapse:collapse;width:100%;margin-top:6px;font-size:13px;}
+  .preview-table th,.preview-table td{border:1px solid #e0e0e0;padding:7px 10px;text-align:left;}
+  .preview-table th{background:#f3eefe;font-weight:600;}
+  .json-out{margin-top:14px;background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:10px;font-size:12px;white-space:pre-wrap;word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace;}
+  .meta{font-size:12px;color:var(--text-secondary);margin-top:8px;}
+
+  /* ===== 以下为原平台「表格选择器」样式（原样提取） ===== */
+  .modal-overlay{position:fixed;inset:0;z-index:11000;background:rgba(15,23,42,.35);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all .2s ease;}
+  .modal-overlay.show{opacity:1;visibility:visible;}
+  .table-picker-popup{background:#fff;border-radius:14px;box-shadow:0 16px 48px rgba(15,23,42,.1);width:380px;padding:20px 22px 18px;position:relative;z-index:11001;}
+  .tp-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:15px;font-weight:600;color:var(--text-primary);}
+  .tp-grid-wrap{padding:4px 0 12px;}
+  .tp-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;user-select:none;-webkit-user-select:none;}
+  .tp-cell{width:100%;aspect-ratio:1;border:2px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;transition:all .08s ease;box-sizing:border-box;}
+  .tp-cell:hover{border-color:#ddd6fe;}
+  .tp-cell.active{background:var(--accent);border-color:var(--accent);}
+  .tp-cell.hovered{background:rgba(139,92,246,.5);border-color:var(--accent);}
+  .tp-custom{border-top:1px solid #f1f1f1;padding-top:14px;margin-top:2px;}
+  .tp-custom-label{font-size:13px;font-weight:600;color:#555;margin-bottom:10px;}
+  .tp-custom-row{display:flex;gap:12px;margin-bottom:10px;}
+  .tp-field{flex:1;display:flex;flex-direction:column;gap:4px;}
+  .tp-field label{font-size:12px;color:#666;font-weight:500;}
+  .tp-field input[type="number"]{width:100%;height:36px;border:2px solid #e5e7eb;border-radius:8px;padding:0 12px;font-size:14px;text-align:center;outline:none;box-sizing:border-box;transition:border-color .15s;}
+  .tp-field input[type="number"]:focus{border-color:#8b5cf6;}
+  .tp-field input[type="number"]::-webkit-inner-spin-button,.tp-field input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+  .tp-opt-row{display:flex;align-items:center;}
+  .tp-checkbox{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:#444;user-select:none;}
+  .tp-checkbox input[type="checkbox"]{width:17px;height:17px;accent-color:#8b5cf6;cursor:pointer;}
+  .tp-confirm-btn{width:100%;height:42px;margin-top:14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;}
+  .tp-confirm-btn:hover{opacity:.92;}
+  .tp-confirm-btn:active{transform:scale(.98);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>表格模版测试台</h1>
+  <div class="sub">独立拆分自《说明书编辑器》平台 · 用于 IT 验证「表格选择器 + 表格组件」功能 · 无外部依赖，双击本文件即可运行</div>
+
+  <!-- 1. 表格选择器 -->
+  <div class="panel">
+    <h2><i class="ti ti-table"></i> 表格选择器（可视化网格选行列）<span class="tag">原样提取</span></h2>
+    <button class="btn btn-primary" onclick="openTablePicker()"><i class="ti ti-table"></i> 打开表格选择器</button>
+    <div class="meta">交互：在网格上滑动/点选 1–10 行 × 1–10 列；或下方「自定义」输入 1–20 行/列；勾选「包含标题行」后首行自动填充「标题N」。</div>
+  </div>
+
+  <!-- 2. 表格组件默认定义 -->
+  <div class="panel">
+    <h2><i class="ti ti-box"></i> 表格组件默认定义（点击添加到预览）<span class="tag">数据驱动</span></h2>
+    <div class="comp-grid" id="compGrid"></div>
+  </div>
+
+  <!-- 3. 结果预览 -->
+  <div class="panel">
+    <h2><i class="ti ti-eye"></i> 结果预览 / 数据校验</h2>
+    <div id="resultArea"><div class="result-empty">尚未创建表格 —— 打开上方选择器或点击组件卡片试试</div></div>
+  </div>
+</div>
+
+<!-- ===== Table Picker Dialog（原样提取） ===== -->
+<div class="modal-overlay" id="tablePickerModal" onclick="if(event.target===this)closeTablePicker()">
+  <div class="table-picker-popup" id="tablePickerPopup">
+    <div class="tp-header">
+      <i class="ti ti-table" style="font-size:18px;color:#8b5cf6;"></i>
+      <span id="tpLabel">3 行 3 列 表格</span>
+    </div>
+    <div class="tp-grid-wrap">
+      <div class="tp-grid" id="tpGrid"></div>
+    </div>
+    <div class="tp-custom">
+      <div class="tp-custom-label">自定义</div>
+      <div class="tp-custom-row">
+        <div class="tp-field">
+          <label>列数</label>
+          <input type="number" id="tpCols" min="1" max="20" value="3">
+        </div>
+        <div class="tp-field">
+          <label>行数</label>
+          <input type="number" id="tpRows" min="1" max="20" value="3">
+        </div>
+      </div>
+      <div class="tp-opt-row">
+        <label class="tp-checkbox">
+          <input type="checkbox" id="tpHasHeader" checked>
+          <span>包含标题行</span>
+        </label>
+      </div>
+    </div>
+    <button class="tp-confirm-btn" id="tpConfirmBtn" onclick="confirmTablePicker()">确定</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   表格组件默认定义（提取自平台 getComponentDefaults 的表格类）
+   ============================================================ */
+const TABLE_COMPONENT_DEFS = {
+  table: {
+    name:'表格', width:300, height:120,
+    style:{backgroundColor:'#ffffff',borderWidth:'1px',borderStyle:'solid',borderColor:'#e0e0e0',borderRadius:'0px',padding:'0px',opacity:1},
+    content:'', props:{rows:3,cols:3}
+  },
+  'specs-table': {
+    name:'参数表格', width:320, height:160,
+    style:{backgroundColor:'#ffffff',borderWidth:'1px',borderStyle:'solid',borderColor:'#e0e0e0',borderRadius:'0px',padding:'0px',opacity:1},
+    content:'', props:{rows:4,cols:2,data:[['项目','参数'],['额定电压','220V'],['额定功率','1000W'],['产品尺寸','200x150x100mm']]}
+  },
+  'spec-grid': {
+    name:'参数网格', width:420, height:150,
+    style:{backgroundColor:'#ffffff',borderRadius:'6px',padding:'0px',opacity:1},
+    content:{items:[['产品型号','GT15X'],['额定电压','220V~ 50Hz'],['额定功率','1200W'],['净重','2.6 kg'],['产品尺寸','291×216×95mm'],['执行标准','GB4706.1']]},
+    props:{cols:2}
+  }
+};
+
+/* ============================================================
+   表格选择器逻辑（原样提取，commit 改为渲染预览）
+   ============================================================ */
+let _tpState = { r:3, c:3, header:true };
+
+function openTablePicker(event) {
+  const modal = document.getElementById('tablePickerModal');
+  const popup = document.getElementById('tablePickerPopup');
+  modal.classList.add('show');
+  _tpState = { r:3, c:3, header:true };
+  document.getElementById('tpCols').value=3; document.getElementById('tpRows').value=3;
+  document.getElementById('tpHasHeader').checked=true;
+  buildTpGrid(); updateTpLabel();
+}
+function closeTablePicker() {
+  document.getElementById('tablePickerModal').classList.remove('show');
+}
+function buildTpGrid() {
+  const grid = document.getElementById('tpGrid');
+  grid.innerHTML='';
+  for(let row=1;row<=10;row++){
+    for(let col=1;col<=10;col++){
+      const cell=document.createElement('div');
+      cell.className='tp-cell'; cell.dataset.r=row; cell.dataset.c=col;
+      cell.addEventListener('mouseenter',()=>{ tpHover(row,col); });
+      cell.addEventListener('click',()=>{ tpSelect(row,col); });
+      grid.appendChild(cell);
+    }
+  }
+}
+function tpHover(r,c){
+  _tpState.r=r; _tpState.c=c;
+  document.querySelectorAll('#tpGrid .tp-cell').forEach(cell=>{
+    const cr=parseInt(cell.dataset.r), cc=parseInt(cell.dataset.c);
+    cell.classList.remove('active','hovered');
+    if(cr<=r&&cc<=c){ cell.classList.add(cr===r||cc===c?'hovered':'active'); }
+  });
+  updateTpLabel();
+  document.getElementById('tpCols').value=c; document.getElementById('tpRows').value=r;
+}
+function tpSelect(r,c){
+  _tpState.r=r; _tpState.c=c;
+  confirmTablePicker();
+}
+function updateTpLabel(){
+  document.getElementById('tpLabel').textContent=
+    `${_tpState.r} 行 ${_tpState.c} 列 表格`;
+}
+function syncTpGrid(){
+  document.querySelectorAll('#tpGrid .tp-cell').forEach(cell=>{
+    const cr=parseInt(cell.dataset.r), cc=parseInt(cell.dataset.c);
+    cell.classList.remove('active','hovered');
+    if(cr<=_tpState.r&&cc<=_tpState.c) cell.classList.add(cr==_tpState.r||cc==_tpState.c?'hovered':'active');
+  });
+}
+function confirmTablePicker(){
+  closeTablePicker();
+  const rows=_tpState.r, cols=_tpState.c, hasHeader=_tpState.header;
+  let data=[];
+  for(let r=0;r<rows;r++){
+    let rowData=[];
+    for(let c=0;c<cols;c++){
+      if(hasHeader && r===0) rowData.push(`标题${c+1}`);
+      else rowData.push('');
+    }
+    data.push(rowData);
+  }
+  const w=Math.max(160, cols*80), h=Math.max(60, rows*36);
+  const el={
+    id:'tbl_'+Date.now(), type:'table', name:'表格',
+    x:0, y:0, width:w, height:h, rotation:0, locked:false, visible:true,
+    style:{backgroundColor:'#ffffff',borderWidth:'1px',borderStyle:'solid',borderColor:'#e0e0e0',borderRadius:'0px',padding:'0px',opacity:1},
+    content:'',
+    props:{rows,cols,data,hasHeader}
+  };
+  commitTable(el);
+}
+
+/* 自定义输入联动 */
+document.getElementById('tpCols').addEventListener('input',()=>{ _tpState.c=Math.max(1,Math.min(20,parseInt(document.getElementById('tpCols').value)||1)); updateTpLabel(); syncTpGrid(); });
+document.getElementById('tpRows').addEventListener('input',()=>{ _tpState.r=Math.max(1,Math.min(20,parseInt(document.getElementById('tpRows').value)||1)); updateTpLabel(); syncTpGrid(); });
+document.getElementById('tpHasHeader').addEventListener('change',(e)=>{ _tpState.header=e.target.checked; });
+
+/* ============================================================
+   预览 / 校验（替换原平台 renderElements / pushHistory 等）
+   ============================================================ */
+let _seq = 0;
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function commitTable(el){
+  _seq++;
+  renderResult(el, _seq);
+  toast(`已创建: ${el.props.rows}行 × ${el.props.cols}列 表格${el.props.hasHeader?'（含标题行）':''}`);
+}
+
+/* 组件卡片快速添加 */
+function quickAdd(type){
+  const def = TABLE_COMPONENT_DEFS[type];
+  if(!def){ return; }
+  let el;
+  if(type==='spec-grid'){
+    const items = def.content.items; const cols = def.props.cols;
+    const rows = Math.ceil(items.length/cols);
+    const data = [];
+    for(let r=0;r<rows;r++){ const row=[]; for(let c=0;c<cols;c++){ row.push(items[r*cols+c]||['','']); } data.push(row.flat ? row : row); }
+    // 参数网格以「键/值」成对呈现，转成二维 data
+    const grid=[]; for(let i=0;i<items.length;i+=2){ grid.push([items[i][0], items[i][1]||'']); }
+    el={ id:'spg_'+Date.now(), type:'spec-grid', name:def.name, x:0,y:0,width:def.width,height:def.height,
+         rotation:0,locked:false,visible:true, style:def.style, content:def.content,
+         props:{rows:grid.length, cols:2, data:grid, hasHeader:false} };
+  } else {
+    const p = def.props;
+    const data = p.data ? p.data.map(r=>r.slice()) : null;
+    el={ id:type+'_'+Date.now(), type, name:def.name, x:0,y:0,width:def.width,height:def.height,
+         rotation:0,locked:false,visible:true, style:def.style, content:def.content,
+         props:{rows:p.rows, cols:p.cols, data, hasHeader: !!data && data.length>0 && data[0].some(v=>v!=='')} };
+  }
+  commitTable(el);
+}
+
+/* 渲染预览表格 + JSON */
+function renderResult(el, seq){
+  const area = document.getElementById('resultArea');
+  let tableHtml='';
+  const p = el.props;
+  if(p && p.data){
+    tableHtml = '<table class="preview-table">';
+    for(let r=0;r<p.rows;r++){
+      tableHtml += '<tr>';
+      for(let c=0;c<p.cols;c++){
+        const v = (p.data[r] && p.data[r][c]!==undefined) ? p.data[r][c] : '';
+        tableHtml += (p.hasHeader && r===0) ? `<th>${escapeHtml(v)}</th>` : `<td>${escapeHtml(v)}</td>`;
+      }
+      tableHtml += '</tr>';
+    }
+    tableHtml += '</table>';
+  }
+  const dims = `尺寸: ${el.width}×${el.height}px ｜ 行×列: ${p?p.rows:'-'}×${p?p.cols:'-'}`;
+  area.innerHTML = `
+    <div class="meta"><b>#${seq}</b> · 类型: <code>${el.type}</code> · 名称: ${escapeHtml(el.name)} · ${dims} · 含标题行: ${p?p.hasHeader:'-'}</div>
+    ${tableHtml || '<div class="result-empty">该组件无二维表格数据</div>'}
+    <div class="json-out">${escapeHtml(JSON.stringify(el, null, 2))}</div>
+  `;
+}
+
+/* 轻量 toast */
+function toast(msg){
+  let t=document.getElementById('_toast');
+  if(!t){ t=document.createElement('div'); t.id='_toast';
+    t.style.cssText='position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:12000;opacity:0;transition:opacity .2s;';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._timer); t._timer=setTimeout(()=>{ t.style.opacity='0'; }, 1800);
+}
+
+/* 渲染组件卡片 */
+(function renderCompCards(){
+  const grid=document.getElementById('compGrid');
+  grid.innerHTML = Object.keys(TABLE_COMPONENT_DEFS).map(k=>{
+    const d=TABLE_COMPONENT_DEFS[k];
+    const sub = d.props.rows ? `${d.props.rows}×${d.props.cols}` : (d.props.cols?`${d.props.cols}列网格`:'');
+    return `<div class="comp-card" onclick="quickAdd('${k}')">
+      <div class="ic"><i class="ti ti-table"></i></div>
+      <div class="nm">${d.name}</div>
+      <div class="ds">${sub} · 点击添加</div>
+    </div>`;
+  }).join('');
+})();
+</script>
+</body>
+</html>
