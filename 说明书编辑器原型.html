@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>说明书翻译大师 v1.6</title>
+  <title>Manual Design v1.6</title>
   <meta name="app-version" content="1.6">
   <!-- FontAwesome 6 图标库：主源 bootcdn(国内稳定) + 回退 cdnjs.cloudflare -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css">
@@ -1808,9 +1808,9 @@
 <div class="entry-screen" id="entryScreen">
   <div class="entry-header">
     <div class="brand">
-      <img src="images/logo-manual.svg" alt="说明书翻译大师">
+      <img src="images/logo-manual.svg" alt="Manual Design">
       <div>
-        <div class="brand-text">说明书翻译大师</div>
+        <div class="brand-text">Manual Design</div>
         <div class="brand-sub">多语言 · AI驱动</div>
       </div>
     </div>
@@ -1886,11 +1886,11 @@
 
   <!-- 悬浮编辑按钮（位于新建按钮上方） -->
   <button class="fab-edit" id="fabEditBtn" onclick="handleEditManual()">
-    <i class="ti ti-pencil"></i> 安规编辑器
+    <i class="ti ti-pencil"></i> 新品说明书
   </button>
   <!-- 悬浮新建按钮 -->
   <button class="fab-new" onclick="openTypeSelectModal()">
-    <i class="ti ti-plus"></i> 新建说明书
+    <i class="ti ti-plus"></i> 旧品说明书
   </button>
 </div>
 
@@ -2055,7 +2055,7 @@
   <!-- ===== Header ===== -->
   <header class="header">
     <div class="logo">
-      <img src="images/logo-manual.svg" alt="说明书翻译大师">
+      <img src="images/logo-manual.svg" alt="Manual Design">
       <span class="logo-text">说明书制作平台</span>
     </div>
 
@@ -9896,7 +9896,7 @@ function renderCatalogGrid() {
   }
 
   if (items.length === 0) {
-    grid.innerHTML = `<div class="catalog-empty"><i class="ti ti-folder-open"></i><p>暂无说明书，点击右下角"新建说明书"创建</p></div>`;
+    grid.innerHTML = `<div class="catalog-empty"><i class="ti ti-folder-open"></i><p>暂无说明书，点击右下角"旧品说明书"创建</p></div>`;
     return;
   }
 
