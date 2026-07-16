@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="128" height="128">
+  <!-- 红色圆圈边框 -->
+  <circle cx="32" cy="32" r="28" fill="none" stroke="#e53935" stroke-width="4.5"/>
+  <!-- 内部3条堆叠横线（Manual Design 风格） -->
+  <rect x="18" y="24" width="28" height="5" rx="2.5" fill="#e53935"/>
+  <rect x="18" y="33" width="22" height="5" rx="2.5" fill="#ef4444"/>
+  <rect x="18" y="42" width="16" height="5" rx="2.5" fill="#f87171"/>
+</svg>
