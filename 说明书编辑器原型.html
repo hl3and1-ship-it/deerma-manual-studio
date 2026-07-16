@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>说明书制作平台 v1.4</title>
-  <meta name="app-version" content="1.4">
+  <title>说明书翻译大师 v1.6</title>
+  <meta name="app-version" content="1.6">
   <!-- FontAwesome 6 图标库：主源 bootcdn(国内稳定) + 回退 cdnjs.cloudflare -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css">
   <script>
@@ -187,6 +187,94 @@
       display: flex; flex-direction: column; overflow: hidden;
     }
     .entry-screen.hidden { display: none; }
+
+    /* ===== Hero Banner（参考翻译排版大师） ===== */
+    .hero-banner {
+      background: linear-gradient(135deg, #f3eeff 0%, #ede4f9 25%, #e8dff5 50%, #f0ebfa 75%, #faf7ff 100%);
+      padding: 32px 36px 28px;
+      position: relative; overflow: hidden;
+      min-height: 200px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute; top: -60px; right: -40px;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute; bottom: -80px; left: 10%;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(167,139,250,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-left {
+      display: flex; align-items: center; gap: 24px; flex: 1; z-index: 1;
+    }
+    .hero-illustration {
+      width: 180px; height: 140px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .hero-illustration-inner {
+      width: 160px; height: 120px; border-radius: 16px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6));
+      box-shadow: 0 4px 20px rgba(139,92,246,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      position: relative;
+    }
+    .hero-ill-badge {
+      position: absolute; top: -8px; left: -6px;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff; font-size: 10px; font-weight: 700; padding: 2px 10px;
+      border-radius: 10px; letter-spacing: 0.5px; white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(239,68,68,0.35);
+    }
+    .hero-ill-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 4px;
+    }
+    .hero-ill-icon i { color: #fff; font-size: 22px; }
+    .hero-ill-lines { display: flex; gap: 10px; margin-top: 4px; }
+    .hero-ill-col { display: flex; flex-direction: column; gap: 4px; }
+    .hero-ill-bar { height: 4px; border-radius: 2px; background: #e8dff5; }
+    .hero-ill-bar.purple { background: linear-gradient(90deg, #8b5cf6, #a78bfa); width: 48px; }
+    .hero-ill-bar.yellow { background: linear-gradient(90deg, #fbbf24, #f59e0b); width: 36px; }
+    .hero-ill-bar.gray { width: 52px; }
+
+    .hero-text { z-index: 1; }
+    .hero-title {
+      font-size: 26px; font-weight: 800; color: var(--text-primary);
+      line-height: 1.3; margin-bottom: 8px; letter-spacing: 0.5px;
+    }
+    .hero-subtitle {
+      font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+      max-width: 420px;
+    }
+    .hero-subtitle span {
+      display: inline-block; margin: 0 4px; color: var(--text-muted);
+    }
+    .hero-right { z-index: 1; flex-shrink: 0; margin-left: 20px; }
+    .hero-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: #fff; border: none; border-radius: 12px;
+      padding: 14px 28px; font-size: 15px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.3), 0 0 0 0 rgba(124,58,237,0);
+      transition: all 0.25s ease; white-space: nowrap;
+    }
+    .hero-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(124,58,237,0.4), 0 0 0 0 rgba(124,58,237,0);
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    }
+    .hero-cta:active { transform: translateY(0); }
+    .hero-cta i { font-size: 18px; }
     .entry-header {
       height: 60px; display: flex; align-items: center; justify-content: space-between;
       padding: 0 28px; background: #fff;
@@ -194,10 +282,13 @@
       box-shadow: 0 1px 3px rgba(15,23,42,0.03);
     }
     .entry-header .brand { display: flex; align-items: center; gap: 10px; }
-    .entry-header .brand img { height: 26px; width: auto; border-radius:7px; }
-    .entry-header .brand-text { font-size: 16px; font-weight:600; color:var(--text-primary); letter-spacing:0.2px; }
-    .entry-header .brand-sub { font-size: 11px; color: var(--text-muted); }
-    .entry-header-right { display: flex; align-items: center; gap: 14px; }
+    .entry-header .brand img { height: 28px; width: auto; border-radius:8px; }
+    .entry-header .brand-text {
+      font-size: 17px; font-weight:700; color:var(--text-primary); letter-spacing:0.3px;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .entry-header .brand-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .entry-header-right { display: flex; align-items: center; gap: 16px; }
     .entry-header-right .search-box {
       display: flex; align-items: center; background: var(--bg-secondary); border-radius: 10px;
       padding: 7px 14px; gap: 8px; border: 1px solid var(--border-color);
@@ -229,41 +320,64 @@
     .catalog-header .sort-btn:hover { border-color: var(--accent-border); color: var(--accent); background: var(--accent-light); }
     .catalog-header .sort-btn.active { color: var(--accent); border-color: var(--accent-border); background: var(--accent-light); }
     .catalog-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;
     }
     .catalog-card {
-      background: #fff; border-radius: 14px;
-      overflow: hidden; cursor: pointer; transition: all 0.2s ease;
-      box-shadow: 0 1px 3px rgba(15,23,42,0.04); position: relative;
-      border: 1px solid transparent;
-      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #e0d4f5, #c4b5fd, #ddd6fe);
-      background-origin: border-box;
-      background-clip: padding-box, border-box;
+      background: #fff; border-radius: 16px;
+      overflow: hidden; cursor: pointer; transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.06); position: relative;
+      border: 1px solid var(--border-light);
     }
     .catalog-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(139,92,246,0.12);
-      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #d4c4ef, #b794f6, #c4b5fd);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(139,92,246,0.12);
     }
+    /* 卡片主题色变体 */
+    .catalog-card.theme-purple { --card-accent: #ede4f9; --card-text: #7c3aed; }
+    .catalog-card.theme-yellow { --card-accent: #fef9c3; --card-text: #b45309; }
+    .catalog-card.theme-gray { --card-accent: #f1f5f9; --card-text: #475569; }
+    .catalog-card.theme-blue { --card-accent: #dbeafe; --card-text: #2563eb; }
+    .catalog-card.theme-green { --card-accent: #dcfce7; --card-text: #16a34a; }
     .catalog-card-preview {
-      height: 180px; background: #fafafa; display: flex; align-items: center; justify-content: center;
-      overflow: hidden; border-bottom: 1px solid var(--border-light); position: relative;
+      height: 160px; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+      background: var(--card-accent, #f5f3ff);
+    }
+    .catalog-card-preview .first-letter {
+      font-size: 72px; font-weight: 700; line-height: 1;
+      color: var(--card-text, var(--accent));
+      opacity: 0.35;
+      user-select: none;
+      transition: opacity 0.2s, transform 0.3s;
+    }
+    .catalog-card:hover .catalog-card-preview .first-letter {
+      opacity: 0.55; transform: scale(1.05);
     }
     .catalog-card-preview img {
       max-width: 80%; max-height: 80%; object-fit: contain; transition: transform 0.3s;
     }
     .catalog-card:hover .catalog-card-preview img { transform: scale(1.04); }
-    .catalog-card-preview .type-badge {
-      position: absolute; top: 10px; left: 10px; padding: 3px 10px; border-radius: 12px;
-      font-size: 11px; font-weight: 600; color: #fff;
-    }
-    .type-badge.color { background: var(--accent-light); color: var(--accent); font-weight: 600; }
 
-    .catalog-card-info { padding: 14px 16px; }
-    .catalog-card-info h4 { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-    .catalog-card-info p { font-size: 12px; color: var(--text-secondary); }
+    .catalog-card-info { padding: 16px 18px 14px; text-align: center; }
+    .catalog-card-info h4 {
+      font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .catalog-card-info p { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .catalog-card-info .catalog-meta {
-      display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--text-muted);
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 10px; font-size: 11px; color: var(--text-muted);
+      padding-top: 10px; border-top: 1px solid var(--border-light);
+    }
+    .catalog-card-info .meta-time { display: flex; align-items: center; gap: 4px; }
+    .catalog-card-info .meta-time i { font-size: 13px; }
+    .catalog-card-info .lang-tags {
+      display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;
+    }
+    .lang-tag {
+      display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 500;
+      background: var(--accent-light); color: var(--accent);
     }
 
     .fab-new {
@@ -1693,8 +1807,8 @@
     <div class="brand">
       <img src="images/logo-manual.png" alt="说明书制作平台">
       <div>
-        <div class="brand-text">说明书制作平台</div>
-        <div class="brand-sub">产品目录</div>
+        <div class="brand-text">说明书翻译大师</div>
+        <div class="brand-sub">多语言 · AI驱动</div>
       </div>
     </div>
     <div class="entry-header-right">
@@ -1708,6 +1822,42 @@
     </div>
   </div>
 
+  <!-- ===== Hero Banner ===== -->
+  <div class="hero-banner">
+    <div class="hero-left">
+      <div class="hero-illustration">
+        <div class="hero-illustration-inner">
+          <span class="hero-ill-badge">🔥 推荐</span>
+          <div class="hero-ill-icon"><i class="ti ti-language"></i></div>
+          <div style="font-size:10px;font-weight:700;color:#8b5cf6;letter-spacing:1px;">多语言翻译</div>
+          <div class="hero-ill-lines">
+            <div class="hero-ill-col">
+              <div class="hero-ill-bar purple"></div>
+              <div class="hero-ill-bar gray"></div>
+              <div class="hero-ill-bar gray" style="width:32px;"></div>
+            </div>
+            <div class="hero-ill-col">
+              <div class="hero-ill-bar yellow"></div>
+              <div class="hero-ill-bar gray" style="width:40px;"></div>
+              <div class="hero-ill-bar gray" style="width:28px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-text">
+        <h1 class="hero-title">多语言适配，一键生成双语说明书</h1>
+        <p class="hero-subtitle">
+          排版自动修正<span>•</span>术语自动替换<span>•</span>术语库<span>•</span>批量转换图片
+        </p>
+      </div>
+    </div>
+    <div class="hero-right">
+      <button class="hero-cta" onclick="openTypeSelectModal()">
+        <i class="ti ti-plus"></i> 开始创建
+      </button>
+    </div>
+  </div>
+
   <div class="entry-tabs">
     <div class="entry-tab active" onclick="switchCatalogTab(this,'all')">全部<span class="count">3</span></div>
     <div class="entry-tab" onclick="switchCatalogTab(this,'color')">彩色说明书<span class="count">2</span></div>
@@ -1717,11 +1867,12 @@
   <div class="entry-main">
     <div class="entry-content" id="catalogContent">
       <div class="catalog-header">
-        <h2>产品目录</h2>
+        <h2>最近使用</h2>
         <div class="sort-group">
-          <span>排序：</span>
-          <button class="sort-btn active" onclick="sortCatalog(this,'recent')">最近编辑</button>
-          <button class="sort-btn" onclick="sortCatalog(this,'name')">名称</button>
+          <div class="search-box" style="display:flex;align-items:center;background:var(--bg-primary);border-radius:10px;padding:7px 14px;gap:8px;border:1px solid var(--border-color);">
+            <i class="ti ti-search" style="color:var(--icon-default);"></i>
+            <input type="text" placeholder="搜索项目..." oninput="filterCatalog(this.value)" style="border:none;background:transparent;outline:none;font-size:13px;width:180px;color:var(--text-primary);">
+          </div>
         </div>
       </div>
       <div class="catalog-grid" id="catalogGrid">
@@ -9746,21 +9897,31 @@ function renderCatalogGrid() {
     return;
   }
 
-  grid.innerHTML = items.map(m => {
-    const typeLabel = m.type === 'color' ? '彩色说明书' : '安规说明书';
-    const typeClass = m.type === 'color' ? 'color' : 'safety';
-    const previewImg = m.template === 'catalog-compact' ? 'images/fig_page2.png' : 'images/fig_page1.png';
-    return `<div class="catalog-card" onclick="openCatalogDocument('${m.id}')">
+  // 卡片主题色循环
+  const themes = ['theme-purple', 'theme-yellow', 'theme-gray', 'theme-blue', 'theme-green'];
+
+  grid.innerHTML = items.map((m, idx) => {
+    const theme = themes[idx % themes.length];
+    const firstChar = (m.name && m.name[0]) || '?';
+    const langNames = (m.langs || ['EN']).map(function(l) {
+      var ln = { 'EN':'英语', 'JA':'日语', 'KO':'韩语', 'DE':'德语', 'FR':'法语',
+                'ES':'西班牙语', 'IT':'意大利语', 'PT':'葡萄牙语', 'RU':'俄语',
+                'TH':'泰语', 'VI':'越南语', 'ZH':'中文' };
+      return ln[l] || l;
+    });
+    return `<div class="catalog-card ${theme}" onclick="openCatalogDocument('${m.id}')">
       <div class="catalog-card-preview">
-        <span class="type-badge ${typeClass}">${typeLabel}</span>
-        <img src="${previewImg}" alt="${m.name}">
+        <span class="first-letter">${firstChar}</span>
       </div>
       <div class="catalog-card-info">
         <h4>${m.name}</h4>
         <p>${m.model}</p>
         <div class="catalog-meta">
-          <span>${m.pages} 页</span>
-          <span>${m.date}</span>
+          <span class="meta-time"><i class="ti ti-clock"></i> ${m.date || '刚刚'}</span>
+          <div class="lang-tags">
+            ${langNames.map(function(ln) { return '<span class="lang-tag">' + ln + '</span>'; }).join('')}
+            ${langNames.length > 3 ? '<span class="lang-tag">+' + (langNames.length - 3) + '</span>' : ''}
+          </div>
         </div>
       </div>
     </div>`;
