@@ -554,7 +554,7 @@
     .btn-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer; }
     .btn-cancel:hover { background: var(--bg-hover); }
     .btn-confirm { background: var(--accent); color: #fff; border: none; cursor: pointer; transition: all 0.2s; }
-    .btn-confirm:hover { background: var(--accent-hover); box-shadow: 0 4px 18px rgba(229,57,53,0.35); }
+    .btn-confirm:hover { background: var(--accent-hover); color:#fff !important; box-shadow: 0 4px 18px rgba(229,57,53,0.35); }
     .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .template-sub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
@@ -715,7 +715,7 @@
       border:none; background:var(--accent); color:#fff; cursor:pointer;
       transition: all 0.2s ease;
     }
-    .np-btn-confirm:hover { background:var(--accent-hover); box-shadow: 0 4px 18px rgba(229,57,53,0.35); }
+    .np-btn-confirm:hover { background:var(--accent-hover); color:#fff !important; box-shadow: 0 4px 18px rgba(229,57,53,0.35); }
 
     .catalog-empty {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1454,7 +1454,7 @@
       font-size:13px; cursor:pointer; font-weight:600; transition:all .15s;
       box-shadow:0 4px 14px rgba(198,40,40,.30);
     }
-    .lang-picker-footer .lp-confirm:hover { box-shadow:0 6px 20px rgba(198,40,40,.40); transform:translateY(-1px); }
+    .lang-picker-footer .lp-confirm:hover { box-shadow:0 6px 20px rgba(198,40,40,.40); transform:translateY(-1px); color:#fff !important; }
     .lang-picker-footer .lp-confirm:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; transform:none; }
 
     /* ===== 翻译确认弹窗（Token预估+二次确认） ===== */
@@ -1516,7 +1516,7 @@
       font-size:13px; cursor:pointer; font-weight:600; transition:all .15s;
       box-shadow:0 4px 14px rgba(198,40,40,.30);
     }
-    .tc-btn-confirm:hover { box-shadow:0 6px 20px rgba(198,40,40,.40); transform:translateY(-1px); }
+    .tc-btn-confirm:hover { box-shadow:0 6px 20px rgba(198,40,40,.40); transform:translateY(-1px); color:#fff !important; }
 
     /* ===== 翻译进度弹窗（参考排版大师） ===== */
     .translate-progress-overlay {
