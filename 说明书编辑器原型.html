@@ -3173,6 +3173,7 @@
         </div>
         <!-- Toolbar -->
         <div class="lang-picker-toolbar">
+          <span class="lang-picker-source">🌐 源语言 EN（英语）</span>
           <span class="lang-picker-count">已选 <b id="lpSelectedCount">0</b></span>
         </div>
         <!-- Action buttons -->
@@ -6309,6 +6310,7 @@ function switchLanguage(code) {
 
 // ── 添加新语言版本（弹出选择器）──
 const ALL_AVAILABLE_LANGS = [
+  { code:'zh', name:'中文（简体）', flag:'CN' },
   { code:'ja', name:'日本語', flag:'JP' }, { code:'ko', name:'한국어', flag:'KR' },
   { code:'de', name:'Deutsch', flag:'DE' }, { code:'fr', name:'Français', flag:'FR' },
   { code:'es', name:'Español', flag:'ES' }, { code:'it', name:'Italiano', flag:'IT' },
@@ -6462,7 +6464,7 @@ function onTargetLangToggle(checkbox) {
 // ══════════════════════════════════════════
 
 /** 常用语言列表（优先显示） */
-const COMMON_LANGS = ['ja','ko','de','es','fr','it','pt','ru','th'];
+const COMMON_LANGS = ['zh','ja','ko','de','es','fr','it','pt','ru','th'];
 
 /** 显示语言选择弹窗 */
 function showLangPickerModal() {
