@@ -3051,9 +3051,6 @@
           <button class="tc-close" onclick="closeTranslateConfirmDialog()" title="关闭">✕</button>
         </div>
         <div class="tc-body">
-          <div class="tc-message" id="tcMessage">
-            本次翻译预计消耗 <b id="tcEstimateTokens">--</b> token，当前可用 <b id="tcAvailableTokens">--</b> token。
-          </div>
           <ul class="tc-detail-list" id="tcDetailList">
             <!-- JS 动态填充 -->
           </ul>
@@ -6503,10 +6500,6 @@ function showTranslateConfirmDialog() {
     if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
     return String(n);
   }
-
-  // 填充主消息
-  document.getElementById('tcEstimateTokens').textContent = formatToken(estTotalTokens);
-  document.getElementById('tcAvailableTokens').textContent = '8.9k'; // 模拟值，实际可从API获取
 
   // 构建详情列表
   var langNames = targetLangs.map(function(code) {
