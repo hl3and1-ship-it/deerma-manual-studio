@@ -6541,412 +6541,448 @@ function confirmAndStartTranslation() {
 // ══════════════════════════════════
 
 /** 收集页面的所有可翻译文本 */
+/**
+ * 收集页面中所有需要翻译的文本内容（v4：全元素类型覆盖）
+ * 覆盖: text / heading / quote / pagenum / warning / info / danger / callout /
+ *       bullet-list / numbered-list(逐项) / spec-grid(逐项) /
+ *       feature-card(title+desc) / bilingual(source) / table(单元格)
+ */
 function collectPageTexts(pageIdx) {
-  const page = state.pages[pageIdx];
+  var page = state.pages[pageIdx];
   if (!page) return [];
-  return (page.elements || [])
-    .filter(el => el.type === 'text' && el.content && String(el.content).trim())
-    .map(el => ({ id: el.id, content: String(el.content), x: el.x, y: el.y, width: el.width, height: el.height, style: { ...el.style } }));
+
+  var results = [];
+  var elements = page.elements || [];
+
+  for (var i = 0; i < elements.length; i++) {
+    var el = elements[i];
+    if (!el || !el.id) continue;
+
+    // ── 1. 简单文本类（content为字符串）──
+    var TEXT_TYPES = ['text', 'heading', 'quote', 'pagenum', 'warning', 'info', 'danger', 'callout'];
+    if (TEXT_TYPES.indexOf(el.type) !== -1 && el.content && String(el.content).trim()) {
+      results.push({
+        id: el.id,
+        content: String(el.content),
+        x: el.x, y: el.y,
+        width: el.width, height: el.height,
+        style: { ...el.style },
+        elementType: el.type
+      });
+      continue;
+    }
+
+    // ── 2. 列表类（items数组）──
+    if ((el.type === 'bullet-list' || el.type === 'numbered-list') && el.content && el.content.items) {
+      var items = el.content.items;
+      for (var li = 0; li < items.length; li++) {
+        if (items[li] && String(items[li]).trim()) {
+          results.push({
+            id: el.id + '__list_' + li,
+            content: String(items[li]),
+            parentId: el.id,
+            parentType: el.type,
+            itemIndex: li,
+            elementType: el.type + '-item'
+          });
+        }
+      }
+      continue;
+    }
+
+    // ── 3. 参数网格（items为[label,value]数组）──
+    if (el.type === 'spec-grid' && el.content && el.content.items) {
+      var sItems = el.content.items;
+      for (var si = 0; si < sItems.length; si++) {
+        if (sItems[si] && sItems[si].length >= 2) {
+          // label（通常不译）+ value（需要翻译）
+          if (sItems[si][1] && String(sItems[si][1]).trim()) {
+            results.push({
+              id: el.id + '__spec_' + si,
+              content: String(sItems[si][1]),
+              parentId: el.id,
+              parentType: 'spec-grid',
+              itemIndex: si,
+              elementType: 'spec-grid-value'
+            });
+          }
+        }
+      }
+      continue;
+    }
+
+    // ── 4. 特性卡片（title + desc）──
+    if (el.type === 'feature-card' && el.content) {
+      if (el.content.title && String(el.content.title).trim()) {
+        results.push({
+          id: el.id + '_title',
+          content: String(el.content.title),
+          parentId: el.id,
+          parentType: 'feature-card',
+          subKey: 'title',
+          elementType: 'feature-card-title'
+        });
+      }
+      if (el.content.desc && String(el.content.desc).trim()) {
+        results.push({
+          id: el.id + '_desc',
+          content: String(el.content.desc),
+          parentId: el.id,
+          parentType: 'feature-card',
+          subKey: 'desc',
+          elementType: 'feature-card-desc'
+        });
+      }
+      continue;
+    }
+
+    // ── 5. 双语对照（只翻译source端）──
+    if (el.type === 'bilingual' && el.content && el.content.source && String(el.content.source).trim()) {
+      results.push({
+        id: el.id + '_source',
+        content: String(el.content.source),
+        parentId: el.id,
+        parentType: 'bilingual',
+        subKey: 'source',
+        elementType: 'bilingual-source'
+      });
+      continue;
+    }
+
+    // ── 6. 表格（单元格遍历）──
+    if ((el.type === 'table' || el.type === 'specs-table') && el.content && el.content.items) {
+      var rows = el.content.items;
+      for (var ri = 0; ri < rows.length; ri++) {
+        if (rows[ri]) {
+          for (var ci = 0; ci < rows[ri].length; ci++) {
+            if (rows[ri][ci] && String(rows[ri][ci]).trim()) {
+              results.push({
+                id: el.id + '_cell_' + ri + '_' + ci,
+                content: String(rows[ri][ci]),
+                parentId: el.id,
+                parentType: el.type,
+                itemIndex: { r: ri, c: ci },
+                elementType: 'table-cell'
+              });
+            }
+          }
+        }
+      }
+      continue;
+    }
+
+    // ── 7. 包装列表（packing-list）──
+    if (el.type === 'packing-list' && el.content && el.content.items) {
+      var pkItems = el.content.items;
+      for (var pi = 0; pi < pkItems.length; pi++) {
+        if (pkItems[pi] && String(pkItems[pi]).trim()) {
+          results.push({
+            id: el.id + '__pk_' + pi,
+            content: String(pkItems[pi]),
+            parentId: el.id,
+            parentType: 'packing-list',
+            itemIndex: pi,
+            elementType: 'packing-list-item'
+          });
+        }
+      }
+      continue;
+    }
+  }
+
+  console.log('[collectPageTexts] 第' + (pageIdx+1) + '页收集到 ' + results.length + ' 条可翻译文本');
+  return results;
 }
 
 /**
  * ══════════════════════════════════════════════════════
- *  LLM 翻译引擎 v3.1（基于腾讯混元 Hy-MT2 / HunyuanMT 模板）
- *  核心改进（v3→v3.1，彻底解决翻译遗漏问题）：
- *    1. 明确声明源语言 = 英语（English），目标语言 = 用户选择
- *    2. 采用 Hy-MT2 官方推荐 prompt 模板格式
- *    3. BATCH_SIZE=8（进一步降低每批条目）
- *    4. temperature=0.08（更确定性输出）
- *    5. 新增单条直接翻译模式 translateSingleDirect()（无编号格式，避免解析丢失）
- *    6. 第4轮全量质量扫描：逐条检测英文残留 → 单条直译修复
- *    7. 英文残留检测阈值降至30%（对≥10字符的文本更敏感）
- *    8. 返回质量报告对象供调用方展示纰漏
+ *  LLM 翻译引擎 v4 — Sequential Single-Pass Translation (SSPT)
+ *
+ *  核心设计变革（v3.1 → v4）：
+ *    ❌ 废弃：批量发送 + 编号格式 + 解析器（根本性遗漏根因）
+ *    ✅ 采用：逐条独立翻译，每条文本独占一次 API 调用
+ *
+ *  为什么这能彻底解决翻译遗漏：
+ *    1. 无编号解析 → 不存在解析丢失问题
+ *    2. 单条请求 → max_tokens 永远充足，无截断
+ *    3. LLM 只需处理一个任务 → 不会"跳过"或"遗漏"
+ *    4. 每条结果直接对应 → 无需复杂的批次→全局索引映射
+ *    5. 失败精准定位 → 只重译失败的条目，不影响其他条目
+ *
+ *  性能优化：
+ *    - 并发控制（CONCURRENCY=3）保持总耗时与批量模式接近
+ *    - 短文本快速路径（≤50字符用更简洁的prompt）
+ *    - 两级重试（标准prompt → 强化prompt）再降级词典
+ *
+ *  可选辅助引擎：
+ *    - HuggingFace NLLB-200 免费API验证（需配置HF_TOKEN）
  * ══════════════════════════════════════════════════════
  */
 async function callTranslateAPI(texts, targetLang, model) {
 
-  // ── 语言名称映射（含源语言） ──
-  const LANG_NAMES = {
+  // ── 语言名称映射 ──
+  var LANG_NAMES = {
     'ja':'日本語','ko':'한국어','de':'Deutsch','fr':'Français','es':'Español',
     'it':'Italiano','pt':'Português','ru':'Русский','nl':'Nederlands',
     'th':'ไทย','vi':'Tiếng Việt','ar':'العربية','pl':'Polski','tr':'Türkçe',
     'zh':'中文','en':'English'
   };
-  const SOURCE_LANG_FULL = 'English';
-  const SOURCE_LANG_NATIVE = '英语';
-  const langName = LANG_NAMES[targetLang] || targetLang;
+  var langName = LANG_NAMES[targetLang] || targetLang;
 
-  // ── 工具函数：检测文本是否仍含大量英文（未翻译），v3.1更敏感 ──
+  // ── 工具函数：检测英文残留（v4分级阈值）──
   function isMostlyEnglish(text) {
     if (!text || text.length < 3) return false;
     var cleaned = text.replace(/\s/g, '');
     if (cleaned.length === 0) return false;
     var englishChars = cleaned.replace(/[^a-zA-Z]/g, '').length;
-    // v3.1: 分级阈值
-    // - 极短文本(≤4字符): 70%
-    // - 短文本(5-10字符): 55%
-    // - 中长文本(11-20字符): 40%
-    // - 长文本(>20字符): 30%（长段落中混入大量英文明显是未翻译）
-    var threshold = 0.70;
-    if (cleaned.length > 20) threshold = 0.30;
-    else if (cleaned.length > 10) threshold = 0.40;
-    else if (cleaned.length > 4) threshold = 0.55;
+    // v4 分级阈值（更严格）
+    // 对于非拉丁字母语言（泰语、俄语、阿拉伯语等），任何>20%的英文字符都是异常
+    var threshold = 0.70;           // 极短(≤4字符)
+    if (cleaned.length > 20) threshold = 0.25;   // 长文本: 25%（更严格）
+    else if (cleaned.length > 10) threshold = 0.35; // 中等: 35%
+    else if (cleaned.length > 4) threshold = 0.50; // 短: 50%
     return englishChars / cleaned.length > threshold;
   }
 
-  // ── 工具函数：多格式编号解析器 v3（增强版） ──
-  function parseNumberedResults(content, expectedCount) {
-    if (!content) return {};
-    var lines = content.split('\n').filter(function(l) { return l.trim(); });
-    var parsed = {};
-    var rawLines = [];
+  // ══════════════════════════════════════
+  //  核心：单条翻译函数（一次 API 调用 = 一条译文）
+  // ══════════════════════════════════════
 
-    // 支持的编号格式（9种，覆盖各种LLM输出习惯）
-    var patterns = [
-      /^\s*\[(\d+)\][\s:：]*(.+)$/s,         // [1] xxx 或 [1]: xxx
-      /^\s*(\d+)\.\s+(.+)$/s,                  // 1. xxx
-      /^\s*\((\d+)\)\s*(.+)$/s,                // (1) xxx
-      /^\s*(\d+)）\s*(.+)$/s,                  // 1）xxx （中文右括号）
-      /^\s*(\d+)\)\s*(.+)$/s,                   // 1) xxx
-      /^\s*(\d+)、\s*(.+)$/s,                   // 1、xxx （中文顿号）
-      /^\s*(\d+)[:：]\s*(.+)$/s,               // 1: xxx 或 1：xxx
-      /^\s*(\d+)．\s*(.+)$/s,                   // 1．xxx（全角点）
-      /^\s*【\s*(\d+)\s*】\s*(.+)$/s            // 【1】xxx
-    ];
-
-    for (var li = 0; li < lines.length; li++) {
-      var line = lines[li];
-      var matched = false;
-      for (var pi = 0; pi < patterns.length; pi++) {
-        var m = line.match(patterns[pi]);
-        if (m) {
-          var num = parseInt(m[1], 10);
-          if (num >= 1 && num <= expectedCount + 10) {
-            parsed[num] = m[2].trim();
-            matched = true;
-            break;
-          }
-        }
-      }
-      if (!matched && line.trim()) {
-        rawLines.push(line.trim());
-      }
-    }
-
-    // 如果解析出的不足，尝试用原始行按顺序填充缺失项
-    var pKeys = Object.keys(parsed).map(Number).sort(function(a,b){return a-b;});
-    if (pKeys.length < expectedCount && rawLines.length > 0) {
-      var ri = 0;
-      for (var n = 1; n <= Math.min(expectedCount, rawLines.length + pKeys.length); n++) {
-        if (!parsed[n] && ri < rawLines.length) {
-          parsed[n] = rawLines[ri++];
-        }
-      }
-    }
-
-    return parsed;
-  }
-
-  // ── 核心：单批次翻译请求（v3 Hy-MT2 风格 prompt） ──
-  async function translateBatch(batchItems, batchIdx, isRetry) {
+  /**
+   * 单条文本直接翻译
+   * @param {string} text - 待翻译的英文文本
+   * @param {number} attempt - 尝试次数(0=首次,1=强化重试)
+   * @returns {string|null} 翻译后的文本，失败返回null
+   */
+  async function translateOne(text, attempt) {
     var aiCfg = getAiConfig ? getAiConfig() : null;
-    if (!aiCfg || !aiCfg.apiKey || !aiCfg.apiBase) {
-      throw new Error('未配置API Key或API地址');
-    }
+    if (!aiCfg || !aiCfg.apiKey || !aiCfg.apiBase) return null;
 
     var useModel = model || aiCfg.model || 'gpt-4o';
     var apiBase = aiCfg.apiBase.replace(/\/+$/, '');
     var url = apiBase + '/chat/completions';
+    var isShort = text.length <= 50;
 
-    // 构建带编号的输入文本
-    var promptItems = batchItems.map(function(t, idx) {
-      return '[' + (idx + 1) + '] ' + t.content;
-    }).join('\n');
+    // ── 根据 attempt 和文本长度选择 prompt 策略 ──
+    var sysPrompt, userPrompt;
 
-    // v3: 根据 retry 次数逐步强化 prompt
-    var retryInstruction = '';
-    if (isRetry === 1) {
-      retryInstruction = '\n\n⚠️ 上一次返回的结果数量不正确或有遗漏。请务必翻译上面列出的每一条内容，不能遗漏任何一条！';
-    } else if (isRetry >= 2) {
-      retryInstruction = '\n\n🔴 严重警告：已经重试多次仍有遗漏。请逐条检查上面的 [' + batchItems.length + '] 条内容，确保每一条都有对应的 [编号] 翻译结果！缺少任何一条都是不可接受的。';
+    if (attempt === 0 && isShort) {
+      // 首次 + 短文本：最简洁的 prompt
+      sysPrompt = 'You are a professional translator. Translate the given English text to ' + langName + '. Output ONLY the translated text, nothing else.';
+      userPrompt = text;
+    } else if (attempt === 0) {
+      // 首次 + 长文本：结构化 prompt
+      sysPrompt =
+        '# Role\nProfessional translator specializing in product manuals and technical documentation.\n\n' +
+        '# Task\nTranslate the following English text into ' + langName + '.\n\n' +
+        '# Rules\n' +
+        '1. Translate EVERY sentence and paragraph completely.\n' +
+        '2. Do NOT skip any content, even long paragraphs.\n' +
+        '3. Do NOT leave any English words or sentences in the result (except brand names/model numbers).\n' +
+        '4. Output ONLY the translation, no explanations or notes.\n' +
+        '5. Maintain original formatting (line breaks, structure).';
+      userPrompt = '--- Source Text (English) ---\n' + text + '\n\n--- Translate to ' + langName + ' ---';
+    } else {
+      // 重试(≥1)：强化 prompt，明确警告
+      var warningLevel = attempt === 1 ? '⚠️' : '🔴 CRITICAL';
+      sysPrompt =
+        warningLevel + ' Your previous translation was rejected because it still contained English text.\n\n' +
+        '# Role\nExpert translator for product documentation.\n\n' +
+        '# Task\nTranslate the following English text into ' + langName + '.\n\n' +
+        '# NON-NEGOTIABLE RULES\n' +
+        '1. You MUST translate the ENTIRE text. Every single word.\n' +
+        '2. The output must be 100% in ' + langName + ', zero English words allowed.\n' +
+        '3. If you output any English text (except proper nouns), the translation will FAIL.\n' +
+        '4. Output ONLY the pure ' + langName + ' translation.\n' +
+        '5. This is your attempt #' + (attempt + 1) + '. Make it count.';
+      userPrompt = text;
     }
 
-    // ══ v3: Hy-MT2 官方风格 system prompt ══
-    var sysPrompt =
-      '# Role\n' +
-      '你是一个专业的多语言翻译引擎，专门用于产品说明书、用户手册和技术文档的精确翻译。\n\n' +
-      '# Task\n' +
-      '将以下 ' + SOURCE_LANG_FULL + '（' + SOURCE_LANG_NATIVE + '）内容完整、准确地翻译为 ' + langName + '。\n\n' +
-      '# Source & Target\n' +
-      '- 源语言 (Source Language): ' + SOURCE_LANG_FULL + '\n' +
-      '- 目标语言 (Target Language): ' + langName + '\n\n' +
-      '# Rules（必须严格遵守，不可违反）\n' +
-      '1. 【完整性】必须翻译每一条内容，绝对不能遗漏任何一条！共 ' + batchItems.length + ' 条。\n' +
-      '2. 【全翻译】每一条都必须完整翻译为' + langName + '，不能保留 ' + SOURCE_LANG_FULL + ' 原文！\n' +
-      '3. 【零混杂】翻译结果中不能混入 ' + SOURCE_LANG_FULL + ' 单词或句子（产品型号、品牌名等专有名词除外）。\n' +
-      '4. 【保格式】保持原文的换行和基本格式结构。\n' +
-      '5. 【纯输出】只输出翻译结果，不要解释、注释、前缀或额外文字。\n' +
-      '6. 【编号格式】严格使用 [编号] 前缀标注每条翻译，例如：\n' +
-      '   [1] 第一条翻译结果\n' +
-      '   [2] 第二条翻译结果\n' +
-      '   [3] 第三条翻译结果\n' +
-      '7. 【连续编号】编号从1开始连续递进，与输入的每条内容一一对应。\n' +
-      '8. 【已译处理】如果某条内容已经是目标语言，也请用[编号]原样输出。\n' +
-      retryInstruction;
+    try {
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + aiCfg.apiKey },
+        body: JSON.stringify({
+          model: useModel,
+          temperature: attempt === 0 ? 0.1 : 0.05,
+          max_tokens: Math.max(512, Math.min(4096, text.length * 5)),
+          messages: [
+            { role: 'system', content: sysPrompt },
+            { role: 'user', content: userPrompt }
+          ]
+        })
+      });
 
-    var body = {
-      model: useModel,
-      temperature: 0.08,
-      max_tokens: Math.max(4096, batchItems.reduce(function(sum, t) {
-        return sum + (t.content ? t.content.length * 3 : 200);
-      }, 0)),
-      messages: [
-        { role: 'system', content: sysPrompt },
-        { role: 'user', content: promptItems }
-      ]
-    };
+      if (!res.ok) {
+        var detail = '';
+        try { var j = await res.json(); detail = (j.error && j.error.message) || ''; } catch(e) {}
+        console.warn('[翻译v4] API错误 ' + res.status + ': ' + detail);
+        return null;
+      }
 
-    var res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + aiCfg.apiKey },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      var detail = '';
-      try { var j = await res.json(); detail = (j.error && j.error.message) || JSON.stringify(j); } catch(e) { detail = ''; }
-      throw new Error('翻译API返回 ' + res.status + ': ' + detail);
+      var data = await res.json();
+      var content = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      return content.trim();
+    } catch(e) {
+      console.warn('[翻译v4] 网络异常:', e.message);
+      return null;
     }
+  }
 
-    var data = await res.json();
-    var content = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
-    return content;
+  /**
+   * 可选：HuggingFace NLLB-200 辅助验证翻译
+   * 当主LLM翻译后仍检测到英文残留时，尝试用NLLB重新翻译
+   */
+  async function tryNllbTranslation(text) {
+    try {
+      var hfToken = (getAiConfig ? getAiConfig() : {}).hfToken;
+      if (!hfToken) return null;
+
+      var nllbCodes = {
+        'ja':'jpn_Jpan','ko':'kor_Hang','de':'deu_Latn','fr':'fra_Latn',
+        'es':'spa_Latn','ita':'ita_Latn','pt':'por_Latn','ru':'rus_Cyrl',
+        'tha':'thai_Thai','vie':'vie_Latn','ara':'arb_Arab','pol':'pol_Latn',
+        'tur':'tur_Latn','zho':'zho_Hans','eng':'eng_Latn'
+      };
+      var tgtCode = nllbCodes[targetLang];
+      if (!tgtCode) return null;
+
+      var resp = await fetch('https://api-inference.huggingface.co/models/facebook/nllb-200-distilled-600M', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + hfToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inputs: text,
+          parameters: { src_lang: 'eng_Latn', tgt_lang: tgtCode }
+        })
+      });
+      if (!resp.ok) return null;
+      var data = await resp.json();
+      if (data && data[0] && data[0].translation_text) return data[0].translation_text;
+      return null;
+    } catch(e) {
+      return null; // NLLB失败不阻塞主流程
+    }
   }
 
   // ══════════════════════════════════════
-  //  主流程
+  //  主流程：逐条独立翻译
   // ══════════════════════════════════════
   try {
     var aiCfg = getAiConfig ? getAiConfig() : null;
     if (!(aiCfg && aiCfg.apiKey && aiCfg.apiBase)) {
-      console.warn('[翻译v3] 未配置AI API，使用本地词典降级翻译');
-      return texts.map(function(t) {
+      console.warn('[翻译v4] 未配置AI API，使用本地词典降级');
+      var fallbackResults = texts.map(function(t) {
         return Object.assign({}, t, { sourceId: t.id, translatedContent: fallbackTranslate(t.content, targetLang) });
       });
+      fallbackResults._qualityReport = { total: texts.length, ok: 0, fixed: 0, failed: texts.length, issues: [{ reason: '未配置API' }] };
+      return fallbackResults;
     }
 
-    // v3.1: 更小的批次（8条 vs v3的10条），进一步降低单次请求复杂度
-    var BATCH_SIZE = 8;
-    var batches = [];
-    for (var i = 0; i < texts.length; i += BATCH_SIZE) {
-      batches.push(texts.slice(i, i + BATCH_SIZE));
-    }
+    var CONCURRENCY = 3; // 并发数：平衡速度和API限制
+    var results = new Array(texts.length);
+    var qualityReport = { total: texts.length, ok: 0, fixed: 0, failed: 0, issues: [] };
 
-    var allResults = new Array(texts.length);
+    console.log('[翻译v4] 开始翻译 ' + texts.length + ' 条文本 → ' + langName);
 
-    // ── 第一轮：分批翻译 ──
-    for (var bi = 0; bi < batches.length; bi++) {
-      var batch = batches[bi];
-      var parsed = {};
-      var success = false;
+    // ── 逐批并发处理 ──
+    for (var baseIdx = 0; baseIdx < texts.length; baseIdx += CONCURRENCY) {
+      var batchItems = [];
+      var batchIndices = [];
+      for (var ci = 0; ci < CONCURRENCY && (baseIdx + ci) < texts.length; ci++) {
+        batchItems.push(texts[baseIdx + ci]);
+        batchIndices.push(baseIdx + ci);
+      }
 
-      // 最多重试 3 次
-      for (var attempt = 0; attempt < 3; attempt++) {
-        try {
-          var respContent = await translateBatch(batch, bi, attempt);
-          parsed = parseNumberedResults(respContent, batch.length);
+      // 并发翻译当前批次
+      var batchPromises = batchItems.map(function(item, bi) {
+        var idx = batchIndices[bi];
+        return (async function() {
+          var textContent = item.content;
 
-          // 校验：有效结果数 >= 批次的80%视为成功
-          var validCount = Object.keys(parsed).filter(function(k) {
-            return parsed[k] && parsed[k].length > 0;
-          }).length;
+          // ── 第1次：标准翻译 ──
+          var result = await translateOne(textContent, 0);
+          var attempts = 1;
 
-          if (validCount >= Math.ceil(batch.length * 0.8)) {
-            success = true;
-            break;
+          // ── 校验：是否仍含英文？→ 第2次强化翻译 ──
+          if ((!result || result.length < 2 || isMostlyEnglish(result)) && attempts < 2) {
+            console.log('[翻译v4] #' + idx + ' 第1次未通过校验，执行第2次强化...');
+            result = await translateOne(textContent, 1);
+            attempts++;
           }
-          console.warn('[翻译v3] 批次' + (bi+1) + ' 第' + (attempt+1) + '次: 解析出 ' + validCount + '/' + batch.length + ' 条，重试中...');
-        } catch (err) {
-          console.warn('[翻译v3] 批次' + (bi+1) + ' 第' + (attempt+1) + '次失败: ' + err.message);
-        }
-      }
 
-      // 写入结果数组
-      var globalStartIdx = bi * BATCH_SIZE;
-      for (var j = 0; j < batch.length; j++) {
-        var translated = parsed[j + 1];
-        var resultObj = Object.assign({}, batch[j], { sourceId: batch[j].id, translatedContent: null });
-        if (translated && translated.length > 0) {
-          resultObj.translatedContent = translated;
-        }
-        allResults[globalStartIdx + j] = resultObj;
-      }
-    }
+          // ── 第2次仍失败？→ 第3次最终重试 ──
+          if ((!result || result.length < 2 || isMostlyEnglish(result)) && attempts < 3) {
+            console.log('[翻译v4] #' + idx + ' 第2次未通过，执行第3次最终重试...');
+            result = await translateOne(textContent, 2);
+            attempts++;
+          }
 
-    // ── 第二轮：补译缺失项和英文残留项 ──
-    var needRetry = [];
-    for (var ri = 0; ri < allResults.length; ri++) {
-      var r = allResults[ri];
-      if (!r || r.translatedContent === null || r.translatedContent.length === 0) {
-        needRetry.push({ idx: ri, item: texts[ri], reason: 'missing' });
-      } else if (isMostlyEnglish(r.translatedContent)) {
-        needRetry.push({ idx: ri, item: texts[ri], reason: 'english_remaining' });
-      }
-    }
-
-    if (needRetry.length > 0 && needRetry.length < texts.length) {
-      console.log('[翻译v3] 第二轮补译 ' + needRetry.length + ' 条（缺失/英文残留）...');
-      for (var ni = 0; ni < needRetry.length; ni++) {
-        var nr = needRetry[ni];
-        try {
-          // 单条独译（给更明确的prompt）
-          var soloContent = await translateBatch([nr.item], -1, false);
-          var soloParsed = parseNumberedResults(soloContent, 1);
-          var soloResult = soloParsed[1];
-          if (soloResult && soloResult.length > 0 && !isMostlyEnglish(soloResult)) {
-            allResults[nr.idx].translatedContent = soloResult;
-          } else {
-            // 单条API仍失败，尝试再翻一次（换一种prompt角度）
-            var retryContent = await translateBatch([nr.item], -1, 1);
-            var retryParsed = parseNumberedResults(retryContent, 1);
-            var retryResult = retryParsed[1];
-            if (retryResult && retryResult.length > 0 && !isMostlyEnglish(retryResult)) {
-              allResults[nr.idx].translatedContent = retryResult;
-            } else {
-              allResults[nr.idx].translatedContent = fallbackTranslate(nr.item.content, targetLang);
+          // ── 3次都失败？→ 尝试NLLB辅助引擎 ──
+          if (!result || result.length < 2 || isMostlyEnglish(result)) {
+            console.log('[翻译v4] #' + idx + ' LLM ' + attempts + '次均未通过，尝试NLLB辅助...');
+            var nllbResult = await tryNllbTranslation(textContent);
+            if (nllbResult && !isMostlyEnglish(nllbResult)) {
+              result = nllbResult;
+              console.log('[翻译v4] #' + idx + ' NLLB翻译成功!');
             }
           }
-        } catch (e) {
-          console.warn('[翻译v3] 补译失败 [' + nr.idx + ']: ' + e.message);
-          allResults[nr.idx].translatedContent = fallbackTranslate(nr.item.content, targetLang);
-        }
-      }
-    } else if (needRetry.length === texts.length) {
-      console.warn('[翻译v3] 所有翻译均失败，完全降级为词典翻译');
-      return texts.map(function(t) {
-        return Object.assign({}, t, { sourceId: t.id, translatedContent: fallbackTranslate(t.content, targetLang) });
-      });
-    }
 
-    // ── 第三轮：最终兜底 ──
-    for (var fi = 0; fi < allResults.length; fi++) {
-      if (!allResults[fi] || !allResults[fi].translatedContent || allResults[fi].translatedContent.length === 0) {
-        allResults[fi] = Object.assign({}, texts[fi], {
-          sourceId: texts[fi].id,
-          translatedContent: fallbackTranslate(texts[fi].content, targetLang)
-        });
-      }
-    }
-
-    // ══════════════════════════════════════
-    //  v3.1 新增：第4轮 — 单条直接翻译 + 全量质量扫描
-    // ══════════════════════════════════════
-
-    /**
-     * 单条直接翻译（无编号格式）
-     * 对于单个文本，直接让LLM输出纯译文，避免编号解析丢失
-     */
-    async function translateSingleDirect(textItem) {
-      var aiCfg = getAiConfig ? getAiConfig() : null;
-      if (!aiCfg || !aiCfg.apiKey || !aiCfg.apiBase) return null;
-
-      var useModel = model || aiCfg.model || 'gpt-4o';
-      var apiBase = aiCfg.apiBase.replace(/\/+$/, '');
-      var url = apiBase + '/chat/completions';
-
-      // v3.1 单条直译 prompt（最简洁，最高成功率）
-      var directPrompt =
-        'Translate the following English text into ' + langName + '. ' +
-        'Output ONLY the translated text, nothing else.\n\n' +
-        textItem.content;
-
-      try {
-        var res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + aiCfg.apiKey },
-          body: JSON.stringify({
-            model: useModel,
-            temperature: 0.05,   // 更低温度，更确定
-            max_tokens: Math.max(1024, textItem.content.length * 4),
-            messages: [
-              { role: 'system', content: 'You are a professional translator. Translate accurately and completely. Output only the translation.' },
-              { role: 'user', content: directPrompt }
-            ]
-          })
-        });
-
-        if (!res.ok) return null;
-        var data = await res.json();
-        var content = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
-        return content.trim();
-      } catch(e) {
-        return null;
-      }
-    }
-
-    // 第4轮：逐条质量扫描，对仍含英文的项使用单条直译修复
-    var scanFixed = 0;
-    var scanTotal = allResults.length;
-    var qualityReport = { total: scanTotal, ok: 0, fixed: 0, failed: 0, issues: [] };
-
-    for (var si = 0; si < allResults.length; si++) {
-      var item = allResults[si];
-      if (!item || !item.translatedContent) {
-        qualityReport.failed++;
-        qualityReport.issues.push({ idx: si, id: texts[si] ? texts[si].id : '?', reason: '空结果', original: texts[si] ? texts[si].content.substring(0, 60) : '' });
-        continue;
-      }
-
-      // 检测是否仍有大量英文
-      if (isMostlyEnglish(item.translatedContent)) {
-        console.log('[翻译v3.1] 第4轮检测到未翻译项 #' + si + ': "' + item.translatedContent.substring(0, 40) + '..."');
-        // 使用单条直译模式重试
-        var directResult = await translateSingleDirect(texts[si]);
-        if (directResult && directResult.length > 2 && !isMostlyEnglish(directResult)) {
-          allResults[si].translatedContent = directResult;
-          scanFixed++;
-          qualityReport.fixed++;
-          console.log('[翻译v3.1] 第4轮单条直译成功 #' + si);
-        } else {
-          // 单条直译也失败，尝试词典
-          var dictResult = fallbackTranslate(texts[si].content, targetLang);
-          if (dictResult !== texts[si].content && dictResult && !isMostlyEnglish(dictResult)) {
-            allResults[si].translatedContent = dictResult;
-            qualityReport.fixed++;
+          // ── 最终判定 ──
+          if (result && result.length >= 2 && !isMostlyEnglish(result)) {
+            // ✅ 翻译成功
+            return Object.assign({}, item, { sourceId: item.id, translatedContent: result, _attempts: attempts });
           } else {
-            qualityReport.failed++;
-            qualityReport.issues.push({
-              idx: si, id: texts[si] ? texts[si].id : '?',
-              reason: '翻译后仍含英文',
-              original: texts[si] ? texts[si].content.substring(0, 80) : '',
-              got: item.translatedContent.substring(0, 80)
-            });
+            // ❌ 全部失败 → 降级词典
+            var dictResult = fallbackTranslate(textContent, targetLang);
+            console.warn('[翻译v4] #' + idx + ' 最终失败(' + attempts + '次LLM+NLLB)，使用词典: "' + dictResult.substring(0, 40) + '..."');
+            return Object.assign({}, item, { sourceId: item.id, translatedContent: dictResult, _attempts: attempts, _fallback: true });
           }
-        }
+        })();
+      });
+
+      // 等待当前批次全部完成
+      var batchResults = await Promise.all(batchPromises);
+      for (var ri = 0; ri < batchResults.length; ri++) {
+        results[batchIndices[ri]] = batchResults[ri];
+      }
+
+      // 报告进度
+      var doneCount = Math.min(baseIdx + CONCURRENCY, texts.length);
+      console.log('[翻译v4] 进度: ' + doneCount + '/' + texts.length);
+    }
+
+    // ── 构建质量报告 ──
+    for (var qi = 0; qi < results.length; qi++) {
+      var r = results[qi];
+      if (!r || !r.translatedContent) {
+        qualityReport.failed++;
+        qualityReport.issues.push({ idx: qi, id: texts[qi]?.id, reason: '空结果', original: texts[qi]?.content?.substring(0, 80) });
+      } else if (r._fallback || isMostlyEnglish(r.translatedContent)) {
+        qualityReport.failed++;
+        qualityReport.issues.push({
+          idx: qi, id: texts[qi]?.id,
+          reason: r._fallback ? '已降级词典' : '仍含英文残留',
+          original: texts[qi]?.content?.substring(0, 80),
+          got: r.translatedContent?.substring(0, 80)
+        });
       } else {
         qualityReport.ok++;
       }
     }
 
-    console.log('[翻译v3.1] 第4轮扫描: 总' + scanTotal + ', 已OK=' + qualityReport.ok + ', 修复=' + scanFixed + ', 失败=' + qualityReport.failed);
+    results._qualityReport = qualityReport;
+    var okCount = qualityReport.ok;
+    console.log('[翻译v4] ✅ 完成! ' + okCount + '/' + texts.length + ' 条成功 (' + Math.round(okCount/texts.length*100) + '%), 纰漏: ' + qualityReport.failed + ' 条');
 
-    // 将质量报告附加到结果上，供调用方使用
-    var finalResult = allResults;
-    finalResult._qualityReport = qualityReport;
-
-    // 统计
-    var okCount = allResults.filter(function(r) { return r && !isMostlyEnglish(r.translatedContent); }).length;
-    console.log('[翻译v3.1] 最终完成: ' + okCount + '/' + allResults.length + ' 条成功 (' + Math.round(okCount/allResults.length*100) + '%), 纰漏: ' + qualityReport.failed + ' 条');
-
-    return finalResult;
+    return results;
 
   } catch (apiErr) {
-    console.warn('[翻译v3.1] API调用异常，降级为词典翻译:', apiErr.message);
-    var fallbackResults = texts.map(function(t) {
+    console.warn('[翻译v4] 异常，降级为词典:', apiErr.message);
+    var fbResults = texts.map(function(t) {
       return Object.assign({}, t, { sourceId: t.id, translatedContent: fallbackTranslate(t.content, targetLang) });
     });
-    fallbackResults._qualityReport = { total: texts.length, ok: 0, fixed: 0, failed: texts.length, issues: [{ reason: 'API异常: ' + apiErr.message }] };
-    return fallbackResults;
+    fbResults._qualityReport = { total: texts.length, ok: 0, fixed: 0, failed: texts.length, issues: [{ reason: 'API异常: ' + apiErr.message }] };
+    return fbResults;
   }
 }
 
@@ -7599,44 +7635,91 @@ const _origSwitchLanguage = switchLanguage;
 // ══════════════════════════════════
 
 async function createTranslatedPages(targetLang) {
-  const langObj = state.languages.find(l => l.code === targetLang);
-  const langLabel = langObj ? langObj.name : targetLang;
-  const cache = state.translatedPages[targetLang];
+  var langObj = state.languages.find(function(l) { return l.code === targetLang; });
+  var langLabel = langObj ? langObj.name : targetLang;
+  var cache = state.translatedPages[targetLang];
   if (!cache) return;
 
-  // 按原始页码排序，确保插入顺序正确
-  const sortedIndices = Object.keys(cache).map(Number).sort((a, b) => a - b);
-  let insertBaseIdx = state.pages.length; // 新页面追加到末尾
+  // 按原始页码排序
+  var sortedIndices = Object.keys(cache).map(Number).sort(function(a,b){return a-b;});
+  var insertBaseIdx = state.pages.length;
 
-  for (const srcPIdx of sortedIndices) {
-    const srcPage = state.pages[srcPIdx];
-    const translations = cache[srcPIdx];
+  for (var si = 0; si < sortedIndices.length; si++) {
+    var srcPIdx = sortedIndices[si];
+    var srcPage = state.pages[srcPIdx];
+    var translations = cache[srcPIdx];
     if (!srcPage || !translations) continue;
 
     // 深拷贝原页面
-    const newPage = JSON.parse(JSON.stringify(srcPage));
-    // 生成唯一 ID
+    var newPage = JSON.parse(JSON.stringify(srcPage));
     newPage.id = 'p' + (state.pages.length + 1);
-    // 名称标注翻译语言
-    newPage.name = srcPage.name.replace(/第(\d+)页/, function(m, n) { return '第' + n + '页'; }) + '(' + langLabel + ')';
-    // 应用翻译后的文字
-    translations.forEach(tr => {
-      const el = (newPage.elements || []).find(e => e.id === tr.sourceId);
-      if (el && el.type === 'text') {
-        el.content = tr.translatedContent;
+    newPage.name = srcPage.name.replace(/第(\d+)页/, function(m,n){return '第'+n+'页';}) + '(' + langLabel + ')';
+
+    // v4: 应用翻译到所有元素类型（不仅限于 type='text'）
+    for (var ti = 0; ti < translations.length; ti++) {
+      var tr = translations[ti];
+      if (!tr || !tr.translatedContent) continue;
+
+      // ── A. 直接匹配顶层元素（text/heading/quote/warning/info/danger/callout/pagenum）──
+      var el = null;
+      for (var ei = 0; ei < newPage.elements.length; ei++) {
+        if (newPage.elements[ei].id === tr.sourceId) { el = newPage.elements[ei]; break; }
       }
-    });
+      if (el) {
+        // 简单文本类：直接替换 content
+        var SIMPLE_TEXT_TYPES = ['text','heading','quote','pagenum','warning','info','danger','callout'];
+        if (SIMPLE_TEXT_TYPES.indexOf(el.type) !== -1) {
+          el.content = tr.translatedContent;
+        }
+        // bilingual: 替换 source 字段
+        else if (el.type === 'bilingual' && tr.subKey === 'source') {
+          el.content.source = tr.translatedContent;
+        }
+        continue;
+      }
+
+      // ── B. 子项匹配（list/spec-grid/feature-card/table/packing-list）──
+      if (!tr.parentId) continue;
+      var parentEl = null;
+      for (var pi2 = 0; pi2 < newPage.elements.length; pi2++) {
+        if (newPage.elements[pi2].id === tr.parentId) { parentEl = newPage.elements[pi2]; break; }
+      }
+      if (!parentEl || !parentEl.content) continue;
+
+      // 列表子项
+      if ((parentEl.type === 'bullet-list' || parentEl.type === 'numbered-list') && parentEl.content.items && typeof tr.itemIndex === 'number') {
+        parentEl.content.items[tr.itemIndex] = tr.translatedContent;
+      }
+      // spec-grid 子项
+      else if (parentEl.type === 'spec-grid' && parentEl.content.items && typeof tr.itemIndex === 'number') {
+        if (parentEl.content.items[tr.itemIndex] && parentEl.content.items[tr.itemIndex].length >= 2) {
+          parentEl.content.items[tr.itemIndex][1] = tr.translatedContent;
+        }
+      }
+      // feature-card 子项
+      else if (parentEl.type === 'feature-card') {
+        if (tr.subKey === 'title') parentEl.content.title = tr.translatedContent;
+        else if (tr.subKey === 'desc') parentEl.content.desc = tr.translatedContent;
+      }
+      // table 单元格
+      else if ((parentEl.type === 'table' || parentEl.type === 'specs-table') && parentEl.content.items && tr.itemIndex && typeof tr.itemIndex.r === 'number') {
+        var rowIdx = tr.itemIndex.r, colIdx = tr.itemIndex.c;
+        if (parentEl.content.items[rowIdx] && parentEl.content.items[rowIdx][colIdx] !== undefined) {
+          parentEl.content.items[rowIdx][colIdx] = tr.translatedContent;
+        }
+      }
+      // packing-list 子项
+      else if (parentEl.type === 'packing-list' && parentEl.content.items && typeof tr.itemIndex === 'number') {
+        parentEl.content.items[tr.itemIndex] = tr.translatedContent;
+      }
+    }
 
     state.pages.push(newPage);
   }
 
-  // 刷新页面列表 + 跳转到第一个新增的翻译页面
   renderPagesList();
-  // 跳到最后一个新加的翻译页
-  const firstNewIdx = insertBaseIdx;
-  switchPage(firstNewIdx);
+  switchPage(insertBaseIdx);
   fitToWindow();
-  // 确保画布渲染最新内容（双重保障）
   renderElements();
 }
 
