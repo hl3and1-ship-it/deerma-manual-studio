@@ -6529,8 +6529,7 @@ function renderLangPickerGrid(filter) {
     var isChecked = preSelected.includes(lang.code);
 
     var badgeHtml = '';
-    if (isCurrent) badgeHtml = '<span class="lg-badge lg-badge-current">当前语言</span>';
-    else if (isCompleted) badgeHtml = '<span class="lg-badge lg-badge-done">已翻译</span>';
+    if (isCompleted) badgeHtml = '<span class="lg-badge lg-badge-done">已翻译</span>';
 
     var checkedClass = isChecked ? ' checked' : '';
     var checkIcon = isChecked ? '✓' : '';
