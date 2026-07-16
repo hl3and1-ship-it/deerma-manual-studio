@@ -6350,6 +6350,8 @@ function renderLangPickerGrid(filter) {
 
   filter = filter || 'common';
   var langs = ALL_AVAILABLE_LANGS.slice();
+  // 排除源语言（英语），避免用户误选翻译成同一种语言
+  langs = langs.filter(function(l) { return l.code !== 'en'; });
 
   // 获取已翻译/当前状态
   var completedCodes = (state.languages || []).filter(function(l) { return l.status === 'completed'; }).map(function(l) { return l.code; });
