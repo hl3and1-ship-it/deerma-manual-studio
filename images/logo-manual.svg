@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="128" height="128">
   <!-- 红色圆圈边框 -->
-  <circle cx="32" cy="32" r="28" fill="none" stroke="#e53935" stroke-width="4.5"/>
-  <!-- 内部3条堆叠横线（Manual Design 风格） -->
-  <rect x="18" y="24" width="28" height="5" rx="2.5" fill="#e53935"/>
-  <rect x="18" y="33" width="22" height="5" rx="2.5" fill="#ef4444"/>
-  <rect x="18" y="42" width="16" height="5" rx="2.5" fill="#f87171"/>
+  <circle cx="32" cy="32" r="28" fill="none" stroke="#e53935" stroke-width="4"/>
+  <!-- 内部3条堆叠菱形线条（层叠卡片风格） -->
+  <path d="M32 20 L46 26 L32 32 L18 26 Z" fill="none" stroke="#e53935" stroke-width="2.8" stroke-linejoin="round"/>
+  <path d="M32 27 L44 32.5 L32 38 L20 32.5 Z" fill="none" stroke="#ef4444" stroke-width="2.8" stroke-linejoin="round"/>
+  <path d="M32 34 L42 39 L32 44 L22 39 Z" fill="none" stroke="#f87171" stroke-width="2.8" stroke-linejoin="round"/>
 </svg>
