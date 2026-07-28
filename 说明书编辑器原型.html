@@ -404,6 +404,38 @@
     .fab-edit:active { transform: translateY(0); }
     .fab-edit i { color: #c62828; font-size: 16px; }
 
+    /* 多语言排版按钮（位于新品说明书上方） */
+    .fab-layout {
+      position: fixed; bottom: 152px; right: 44px; z-index: 10001;
+      background: linear-gradient(135deg, #fecdd3 0%, #fff1f2 50%, #fef2f2 100%); color: #1a1a2e; border: none; border-radius: 14px;
+      padding: 13px 26px; font-size: 14px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(229,57,53,0.18), 0 0 40px rgba(229,57,53,0.08);
+      display: flex; align-items: center; gap: 8px; transition: all 0.25s ease;
+    }
+    .fab-layout:hover { transform: translateY(-2px); background: linear-gradient(135deg, #fca5a5 0%, #fee2e2 50%, #fecaca 100%); box-shadow: 0 8px 28px rgba(229,57,53,0.25), 0 0 56px rgba(229,57,53,0.12); }
+    .fab-layout:active { transform: translateY(0); }
+    .fab-layout i { color: #c62828; font-size: 16px; }
+    .fab-layout:hover i { color: #b71c1c !important; }
+
+    /* 多语言排版 内嵌面板 */
+    .ml-panel { z-index: 12000; background: rgba(15,23,42,0.55); padding: 2vh 2vw; }
+    .ml-dialog { width: 100%; height: 100%; background: #fff; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transform: translateY(20px); transition: transform 0.22s ease; }
+    .ml-panel.show .ml-dialog { transform: translateY(0); }
+    .ml-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: linear-gradient(135deg, #e53935, #c62828); color: #fff; flex-shrink: 0; }
+    .ml-bar-title { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .ml-bar-actions { display: flex; align-items: center; gap: 10px; }
+    .ml-bar-link { background: rgba(255,255,255,0.18); color: #fff; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+    .ml-bar-link:hover { background: rgba(255,255,255,0.30); }
+    .ml-bar-close { background: rgba(255,255,255,0.18); color: #fff; border: none; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .ml-bar-close:hover { background: rgba(255,255,255,0.30); }
+    .ml-frame-wrap { position: relative; flex: 1; background: #f3f4f6; min-height: 0; }
+    .ml-frame { width: 100%; height: 100%; border: none; display: block; }
+    .ml-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #9ca3af; font-size: 14px; background: #fff; text-align: center; padding: 20px; }
+    .ml-loading i { font-size: 34px; color: #e53935; animation: ml-spin 1s linear infinite; }
+    .ml-loading .ml-fallback-btn { margin-top: 6px; background: #e53935; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+    .ml-loading .ml-fallback-btn:hover { background: #c62828; }
+    @keyframes ml-spin { to { transform: rotate(360deg); } }
+
     /* ===== Modal ===== */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 11000; background: rgba(15,23,42,0.35);
@@ -1884,6 +1916,10 @@
     </div>
   </div>
 
+  <!-- 悬浮：多语言排版（位于新品说明书上方，内嵌 Poster Editor） -->
+  <button class="fab-layout" id="fabLayoutBtn" onclick="openMultilingualLayout()">
+    <i class="ti ti-language"></i> 多语言排版
+  </button>
   <!-- 悬浮编辑按钮（位于新建按钮上方） -->
   <button class="fab-edit" id="fabEditBtn" onclick="handleEditManual()">
     <i class="ti ti-pencil"></i> 新品说明书
@@ -1892,6 +1928,23 @@
   <button class="fab-new" onclick="openTypeSelectModal()">
     <i class="ti ti-plus"></i> 旧品说明书
   </button>
+</div>
+
+<!-- ===== 多语言排版 内嵌面板（克隆自 Poster Editor） ===== -->
+<div class="modal-overlay ml-panel" id="mlEmbedPanel" onclick="if(event.target===this)closeMultilingualLayout()">
+  <div class="ml-dialog">
+    <div class="ml-bar">
+      <div class="ml-bar-title"><i class="ti ti-language"></i> 多语言排版 · Manual Design</div>
+      <div class="ml-bar-actions">
+        <button class="ml-bar-link" onclick="window.open(ML_EDITOR_URL,'_blank')"><i class="ti ti-external-link"></i> 新标签页打开</button>
+        <button class="ml-bar-close" onclick="closeMultilingualLayout()" title="关闭"><i class="ti ti-x"></i></button>
+      </div>
+    </div>
+    <div class="ml-frame-wrap">
+      <div class="ml-loading" id="mlLoading"><i class="ti ti-loader-2"></i><span>正在加载多语言排版编辑器…</span></div>
+      <iframe id="mlFrame" class="ml-frame" src="about:blank" onload="onMlFrameLoad()" allow="fullscreen" referrerpolicy="no-referrer"></iframe>
+    </div>
+  </div>
 </div>
 
 <!-- ===== 新建项目弹窗 ===== -->
@@ -2038,6 +2091,13 @@
           <div class="type-select-card np-tpl-card selected" data-type="" data-tpl="blank" onclick="selectNpTemplate(this)">
             <div class="template-sub-preview" style="display:flex;align-items:center;justify-content:center;font-size:32px;color:#ccc;">+</div>
             <div class="template-sub-info"><h5>空白文档</h5><span>从空白开始自由设计</span></div>
+          </div>
+          <!-- 新品说明书（多页上市手册） -->
+          <div class="type-select-card np-tpl-card" data-type="newproduct" data-tpl="new-product" onclick="selectNpTemplate(this)">
+            <div class="template-sub-preview" style="display:flex;align-items:center;justify-content:center;color:#e53935;">
+              <i class="ti ti-sparkles" style="font-size:36px;"></i>
+            </div>
+            <div class="template-sub-info"><h5>新品说明书</h5><span>多页上市手册 · 亮点/规格/步骤/包装</span></div>
           </div>
         </div>
       </div>
@@ -10052,6 +10112,41 @@ function handleEditManual() {
   }
 }
 
+/* ===== 多语言排版：克隆 Poster Editor 并内嵌到平台 ===== */
+const ML_EDITOR_URL = 'https://bb7ceb243aae44dcad79cc8c7f06839e.app.codebuddy.work/';
+let _mlLoadTimer = null;
+function openMultilingualLayout() {
+  const panel = document.getElementById('mlEmbedPanel');
+  const frame = document.getElementById('mlFrame');
+  const loading = document.getElementById('mlLoading');
+  loading.style.display = 'flex';
+  loading.innerHTML = '<i class="ti ti-loader-2"></i><span>正在加载多语言排版编辑器…</span>';
+  // 懒加载：仅在首次打开时设置 src，避免一进页面就拉取重型 Next.js 应用
+  if (!frame.getAttribute('data-loaded')) {
+    frame.src = ML_EDITOR_URL;
+  }
+  panel.classList.add('show');
+  // 兜底：若预览环境禁止内嵌（X-Frame-Options / 登录拦截），超时后给出新标签页打开入口
+  clearTimeout(_mlLoadTimer);
+  _mlLoadTimer = setTimeout(function () {
+    if (!frame.getAttribute('data-loaded')) {
+      loading.innerHTML = '<i class="ti ti-alert-triangle"></i>' +
+        '<span>无法在当前窗口内嵌加载（可能是预览环境限制）。</span>' +
+        '<button class="ml-fallback-btn" onclick="window.open(\'' + ML_EDITOR_URL + '\',\'_blank\')"><i class="ti ti-external-link"></i> 在新标签页打开</button>';
+    }
+  }, 12000);
+}
+function onMlFrameLoad() {
+  const frame = document.getElementById('mlFrame');
+  frame.setAttribute('data-loaded', '1');
+  document.getElementById('mlLoading').style.display = 'none';
+  clearTimeout(_mlLoadTimer);
+}
+function closeMultilingualLayout() {
+  document.getElementById('mlEmbedPanel').classList.remove('show');
+  // 保留 iframe src，便于下次秒开；如需释放资源可改为 frame.src='about:blank'
+}
+
 function openTypeSelectModal() {
   modalState = { manualType: null, selectedTemplate: 'blank', projectSettings: {} };
   _npPdfFile = null;
@@ -10283,6 +10378,196 @@ function applySafetyTemplate() {
 
 
 
+
+// ============================
+//  新品说明书模板（多页 · 新品上市手册）
+//  区别于旧品/安规：突出产品亮点 · 规格 · 使用步骤 · 包装清单，版式更营销化
+//  复用同一编辑器核心，平台品牌红主题
+// ============================
+function applyNewProductTemplate() {
+  if (typeof hideEntryScreen === 'function') hideEntryScreen();
+  showToast('正在创建新品说明书...', 'info');
+  setTimeout(() => {
+    const ps = state.projectSettings || {};
+    const dpi = ps.dpi || 300;
+    const PW_mm = ps.pageW_mm || 148;
+    const PH_mm = ps.pageH_mm || 210;
+    const S = dpi / 25.4;
+    const PW = Math.round(PW_mm * S);
+    const PH = Math.round(PH_mm * S);
+
+    // 同步画布尺寸
+    state.projectSettings = Object.assign({}, state.projectSettings, { pageW: PW, pageH: PH });
+    window.PAGE_W = PW; window.PAGE_H = PH;
+    if (state.pages.length > 0) { state.pages[0].w = PW; state.pages[0].h = PH; }
+
+    newDocument();
+
+    const INK = DESIGN.INK, INK2 = DESIGN.INK2, GRAY = DESIGN.GRAY, HAIR = DESIGN.HAIR,
+          WHITE = DESIGN.WHITE, PANEL = DESIGN.PANEL;
+    const F = DESIGN.F;
+    const ACCENT = '#e53935';       // 平台品牌红
+    const ACCENT_D = '#c62828';
+    const WARN_BG = DESIGN.WARN_BG, WARN_BD = DESIGN.WARN_BD, WARN_TX = DESIGN.WARN_TX;
+
+    function TX(page, text, x, y, w, h, style) {
+      const s = Object.assign({ fontFamily: F, backgroundColor: 'transparent', color: INK }, style || {});
+      page.elements.push(createTextElement(text, Math.round(x*S), Math.round(y*S), Math.round(w*S), Math.round(h*S), s));
+    }
+    function BX(page, x, y, w, h, opts) {
+      page.elements.push(createShapeElement(Math.round(x*S), Math.round(y*S), Math.round(w*S), Math.round(h*S),
+        Object.assign({ backgroundColor: '#ffffff', borderWidth: '0px' }, opts || {})));
+    }
+    function IMG(page, x, y, w, h, svg) {
+      page.elements.push(createImageElement(Math.round(x*S), Math.round(y*S), Math.round(w*S), Math.round(h*S), svg));
+    }
+
+    const pages = [];
+    function NP(name) {
+      const p = { id: 'p' + (pages.length + 1), name: name, elements: [], w: PW, h: PH, borderRadius: 0 };
+      pages.push(p);
+      return p;
+    }
+
+    const MX = 12, CW = PW_mm - MX * 2;
+
+    // ===== 第1页：封面 =====
+    const cover = NP('封面');
+    BX(cover, 0, 0, PW_mm, 46, { backgroundColor: ACCENT });
+    TX(cover, 'DEERMA', MX, 12, 60, 9, { fontSize: 16, fontWeight: '800', color: WHITE, letterSpacing: '0.06em', lineHeight: '18px' });
+    TX(cover, 'NEW ARRIVAL', MX, 26, 60, 5, { fontSize: 7, fontWeight: '700', color: '#ffd9d9', letterSpacing: '0.18em', lineHeight: '8px' });
+    IMG(cover, PW_mm - 40, 8, 28, 28, QR_SVG);
+    TX(cover, '扫码看新品视频', PW_mm - 46, 38, 40, 5, { fontSize: 5.5, color: '#ffd9d9', textAlign: 'center', lineHeight: '7px' });
+
+    IMG(cover, (PW_mm - CW) / 2 + CW / 2 - 30, 56, 60, 95, VACUUM_SVG);
+    TX(cover, 'Z50 PRO', MX, 156, CW, 16, { fontSize: 30, fontWeight: '800', color: INK, textAlign: 'center', letterSpacing: '-0.5px', lineHeight: '32px' });
+    TX(cover, '智能无线吸尘器 · 新品上市', MX, 174, CW, 8, { fontSize: 10, fontWeight: '600', color: GRAY, textAlign: 'center', lineHeight: '12px' });
+    BX(cover, PW_mm / 2 - 22, 186, 44, 2.5, { backgroundColor: ACCENT });
+    TX(cover, 'Smart · Powerful · Light', MX, 192, CW, 6, { fontSize: 7.5, fontWeight: '500', color: INK2, textAlign: 'center', lineHeight: '9px' });
+
+    BX(cover, 0, PH_mm - 22, PW_mm, 22, { backgroundColor: PANEL });
+    const quick = ['25K Pa 大吸力', '60min 长续航', '≤68dB 静音', '智能 WiFi'];
+    let qx = MX;
+    quick.forEach(q => {
+      TX(cover, '· ' + q, qx, PH_mm - 17, CW / 4, 6, { fontSize: 6.5, fontWeight: '700', color: ACCENT_D, lineHeight: '9px' });
+      qx += CW / 4;
+    });
+
+    // ===== 第2页：产品亮点 =====
+    const hl = NP('产品亮点');
+    TX(hl, '产品亮点', MX, 10, CW, 12, { fontSize: 20, fontWeight: '800', color: INK, lineHeight: '24px' });
+    BX(hl, MX, 24, 30, 2.5, { backgroundColor: ACCENT });
+    TX(hl, 'PRODUCT HIGHLIGHTS', MX, 28, CW, 5, { fontSize: 7, fontWeight: '700', color: GRAY, letterSpacing: '0.12em', lineHeight: '8px' });
+
+    const feats = [
+      ['智能 WiFi 互联', '手机 App 远程操控，清扫计划一键定制，使用更省心。'],
+      ['25,000 Pa 大吸力', '无刷数码马达，深层除螨除尘，地毯缝隙也干净。'],
+      ['60 分钟长续航', '大容量锂电，一次充电全屋清扫，告别频繁充电。'],
+      ['≤ 68 dB 静音', '优化风道降噪，夜间清扫也不扰眠。']
+    ];
+    let fy = 40;
+    feats.forEach((f, i) => {
+      BX(hl, MX, fy, CW, 30, { backgroundColor: PANEL, borderRadius: '6px' });
+      BX(hl, MX, fy, 4, 30, { backgroundColor: ACCENT, borderRadius: '6px 0 0 6px' });
+      TX(hl, '0' + (i + 1), MX + 12, fy + 4, 16, 14, { fontSize: 20, fontWeight: '800', color: ACCENT, lineHeight: '22px' });
+      TX(hl, f[0], MX + 34, fy + 5, CW - 40, 9, { fontSize: 11, fontWeight: '800', color: INK, lineHeight: '12px' });
+      TX(hl, f[1], MX + 34, fy + 16, CW - 40, 12, { fontSize: 7.5, color: INK2, lineHeight: '10px' });
+      fy += 36;
+    });
+
+    // ===== 第3页：规格参数 =====
+    const sp = NP('规格参数');
+    TX(sp, '规格参数', MX, 10, CW, 12, { fontSize: 20, fontWeight: '800', color: INK, lineHeight: '24px' });
+    BX(sp, MX, 24, 30, 2.5, { backgroundColor: ACCENT });
+    TX(sp, 'SPECIFICATIONS', MX, 28, CW, 5, { fontSize: 7, fontWeight: '700', color: GRAY, letterSpacing: '0.12em', lineHeight: '8px' });
+
+    const specs = [
+      ['额定功率', '450 W'], ['吸力', '25,000 Pa'], ['噪音', '≤ 68 dB'],
+      ['电池容量', '2,500 mAh'], ['续航时间', '60 min'], ['尘杯容量', '0.6 L'],
+      ['过滤系统', 'HEPA 13'], ['净重', '1.5 kg'], ['尺寸', '250 × 1100 mm']
+    ];
+    let sy = 40;
+    specs.forEach(r => {
+      TX(sp, r[0], MX, sy, CW - 50, 8, { fontSize: 9, fontWeight: '600', color: GRAY, lineHeight: '12px' });
+      TX(sp, r[1], MX + CW - 50, sy, 50, 8, { fontSize: 9, fontWeight: '800', color: INK, textAlign: 'right', lineHeight: '12px' });
+      BX(sp, MX, sy + 12, CW, 1, { backgroundColor: HAIR });
+      sy += 18;
+    });
+
+    // ===== 第4页：使用步骤 =====
+    const st = NP('使用步骤');
+    TX(st, '使用步骤', MX, 10, CW, 12, { fontSize: 20, fontWeight: '800', color: INK, lineHeight: '24px' });
+    BX(st, MX, 24, 30, 2.5, { backgroundColor: ACCENT });
+    TX(st, 'QUICK START', MX, 28, CW, 5, { fontSize: 7, fontWeight: '700', color: GRAY, letterSpacing: '0.12em', lineHeight: '8px' });
+
+    const steps = [
+      ['安装地刷', '将电动地刷卡入主机，听到“咔哒”声即安装到位。'],
+      ['连接充电', '首次使用前充电 4.5 小时至指示灯常亮。'],
+      ['开机清扫', '长按电源键 2 秒开机，选择所需档位开始清扫。'],
+      ['App 互联', '打开 Deerma App 绑定设备，远程制定清扫计划。'],
+      ['清理维护', '每次使用后清空尘杯，每月清洗滤网保持吸力。']
+    ];
+    let ty = 40;
+    steps.forEach((s, i) => {
+      BX(st, MX, ty, 16, 16, { backgroundColor: ACCENT, borderRadius: '50%' });
+      TX(st, (i + 1) + '', MX, ty + 2.5, 16, 12, { fontSize: 9, fontWeight: '800', color: WHITE, textAlign: 'center', lineHeight: '12px' });
+      TX(st, s[0], MX + 22, ty, CW - 22, 9, { fontSize: 11, fontWeight: '800', color: INK, lineHeight: '12px' });
+      TX(st, s[1], MX + 22, ty + 11, CW - 22, 12, { fontSize: 7.5, color: INK2, lineHeight: '10px' });
+      ty += 30;
+    });
+
+    // ===== 第5页：安全须知 =====
+    const sf = NP('安全须知');
+    TX(sf, '安全须知', MX, 10, CW, 12, { fontSize: 20, fontWeight: '800', color: INK, lineHeight: '24px' });
+    BX(sf, MX, 24, 30, 2.5, { backgroundColor: ACCENT });
+    BX(sf, MX, 32, CW, 22, { backgroundColor: WARN_BG, borderWidth: '1px', borderColor: WARN_BD, borderRadius: '6px' });
+    BX(sf, MX, 32, 4, 22, { backgroundColor: WARN_TX, borderRadius: '6px 0 0 6px' });
+    TX(sf, '⚠ 警告', MX + 12, 36, CW - 20, 7, { fontSize: 10, fontWeight: '800', color: WARN_TX, lineHeight: '10px' });
+    TX(sf, '使用前请仔细阅读，不当使用可能导致触电、火灾或人身伤害。', MX + 12, 46, CW - 20, 8, { fontSize: 7, color: '#6b4a12', lineHeight: '10px' });
+
+    const topics = [
+      ['电气安全', '仅使用原装适配器，勿在潮湿环境使用，不用时断开电源。'],
+      ['防火防爆', '远离易燃物至少 50cm，勿遮挡进排气口，远离热源。'],
+      ['儿童宠物', '非玩具，8 岁以下儿童需监护，勿让头发衣物靠近滚刷。'],
+      ['保养存放', '每次清空尘杯，每月清洗滤网，存放于干燥通风处。']
+    ];
+    let fy2 = 62;
+    topics.forEach((t, i) => {
+      if (i > 0) BX(sf, MX, fy2 - 4, CW, 1, { backgroundColor: HAIR });
+      TX(sf, '0' + (i + 1), MX, fy2, 14, 12, { fontSize: 14, fontWeight: '800', color: ACCENT, lineHeight: '16px' });
+      TX(sf, t[0], MX + 18, fy2, CW - 18, 8, { fontSize: 10, fontWeight: '800', color: INK, lineHeight: '11px' });
+      TX(sf, t[1], MX + 18, fy2 + 11, CW - 18, 12, { fontSize: 7.5, color: INK2, lineHeight: '10px' });
+      fy2 += 32;
+    });
+
+    // ===== 第6页：包装清单 =====
+    const pk = NP('包装清单');
+    TX(pk, '包装清单', MX, 10, CW, 12, { fontSize: 20, fontWeight: '800', color: INK, lineHeight: '24px' });
+    BX(pk, MX, 24, 30, 2.5, { backgroundColor: ACCENT });
+    TX(pk, 'IN THE BOX', MX, 28, CW, 5, { fontSize: 7, fontWeight: '700', color: GRAY, letterSpacing: '0.12em', lineHeight: '8px' });
+
+    const items = ['主机 × 1', '电动地刷 × 1', '二合一扁吸 × 1', '缝隙吸头 × 1', '充电底座 × 1', '适配器 × 1', '说明书 / 保修卡 × 1'];
+    let iy = 42;
+    items.forEach(it => {
+      BX(pk, MX + 2, iy + 3, 4, 4, { backgroundColor: ACCENT, borderRadius: '50%' });
+      TX(pk, it, MX + 14, iy, CW - 14, 8, { fontSize: 9.5, fontWeight: '600', color: INK, lineHeight: '12px' });
+      iy += 16;
+    });
+    BX(pk, 0, PH_mm - 16, PW_mm, 16, { backgroundColor: ACCENT });
+    TX(pk, 'DEERMA · 让清洁更智能', MX, PH_mm - 12, CW, 7, { fontSize: 8, fontWeight: '700', color: WHITE, lineHeight: '10px' });
+
+    state.pages = pages;
+    state.currentPageIdx = 0;
+    state.selectedIds = []; state.primarySelectedId = null;
+    renderElements();
+    renderPagesList();
+    updatePropsPanel();
+    fitToWindow();
+    pushHistory('创建新品说明书（多页）');
+    updateSaveStatus();
+    showToast('新品说明书已创建', 'success');
+  }, 400);
+}
 
 // ============================
 //  GT15X 安规说明书模板（英俄双语 · 可编辑）
