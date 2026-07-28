@@ -28,7 +28,7 @@
   var MAX_DRAFTS = 10;
   var BLOB_MAP = new Map();
 
-  // ===================== Blob 捕获（用于保存草稿时读取当前项目） =====================
+  // ===================== Blob 捕获 =====================
   var originalCreateObjectURL = URL.createObjectURL;
   URL.createObjectURL = function (blob) {
     var url = originalCreateObjectURL.call(URL, blob);
@@ -42,9 +42,11 @@
   };
 
   // ===================== 下载锚点捕获 =====================
-  var pendingMdocUrl = null;
   var pendingMdocName = null;
-  var suppressNextDownload = false;
+  var pendingMdocUrl = null;
+  var captureMode = false;
+  var captureTimer = null;
+  var captureCallback = null;
   var originalCreateElement = document.createElement;
   document.createElement = function (tagName, options) {
     var el = originalCreateElement.call(document, tagName, options);
@@ -84,12 +86,26 @@
       var url = a.href;
       var name = a.download;
       var blob = BLOB_MAP.get(url);
-      var shouldSuppress = suppressNextDownload;
-      suppressNextDownload = false;
+      if (captureMode && blob) {
+        finishCapture(blob, name);
+        return;
+      }
       if (blob) captureMdocBlob(blob, name);
-      if (shouldSuppress) return;
     }
     return originalClick.call(this);
+  };
+
+  var originalOpen = window.open;
+  window.open = function (url, target, features) {
+    if (typeof url === 'string' && url.indexOf('blob:') === 0) {
+      var blob = BLOB_MAP.get(url);
+      if (captureMode && blob) {
+        finishCapture(blob, pendingMdocName || 'Untitled.mdoc');
+        return null;
+      }
+      if (blob) captureMdocBlob(blob, pendingMdocName || 'Untitled.mdoc');
+    }
+    return originalOpen.apply(window, arguments);
   };
 
   function captureMdocBlob(blob, filename) {
@@ -105,6 +121,49 @@
       }
     };
     reader.readAsText(blob);
+  }
+
+  function finishCapture(blob, filename) {
+    if (!blob) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var content = reader.result;
+      try {
+        JSON.parse(content);
+        saveCapturedDraft(filename.replace(/\.mdoc$/i, '') || generateName(), content);
+      } catch (e) {
+        if (captureCallback) captureCallback(new Error('保存失败：项目数据不是有效的 JSON'));
+        resetCapture();
+      }
+    };
+    reader.onerror = function () {
+      if (captureCallback) captureCallback(new Error('读取项目数据失败'));
+      resetCapture();
+    };
+    reader.readAsText(blob);
+  }
+
+  function saveCapturedDraft(name, content) {
+    var drafts = getDrafts();
+    var item = {
+      id: 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+      name: name || generateName(),
+      content: content,
+      size: content.length,
+      createdAt: Date.now()
+    };
+    drafts.unshift(item);
+    if (drafts.length > MAX_DRAFTS) drafts = drafts.slice(0, MAX_DRAFTS);
+    setDrafts(drafts);
+    resetCapture();
+    if (captureCallback) captureCallback(null, item);
+  }
+
+  function resetCapture() {
+    captureMode = false;
+    clearTimeout(captureTimer);
+    captureTimer = null;
+    captureCallback = null;
   }
 
   // ===================== localStorage 草稿管理 =====================
@@ -123,32 +182,23 @@
     return '草稿 ' + now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
   }
   function saveCurrentDraft(cb) {
+    captureMode = true;
+    captureCallback = cb;
     window.__lastCapturedMdoc = null;
     var saveBtn = findButtonByText(['保存文件']);
-    if (!saveBtn) { if (cb) cb(new Error('未找到保存文件按钮')); return; }
-    suppressNextDownload = true;
+    if (!saveBtn) {
+      resetCapture();
+      if (cb) cb(new Error('未找到保存文件按钮'));
+      return;
+    }
     saveBtn.click();
-    suppressNextDownload = false;
-    var waited = 0;
-    var timer = setInterval(function () {
-      waited += 80;
-      if (window.__lastCapturedMdoc) {
-        clearInterval(timer);
-        var drafts = getDrafts();
-        var item = window.__lastCapturedMdoc;
-        item.id = 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-        item.name = generateName();
-        drafts.unshift(item);
-        if (drafts.length > MAX_DRAFTS) drafts = drafts.slice(0, MAX_DRAFTS);
-        setDrafts(drafts);
-        if (cb) cb(null, item);
-        return;
+    clearTimeout(captureTimer);
+    captureTimer = setTimeout(function () {
+      if (captureMode) {
+        resetCapture();
+        if (cb) cb(new Error('未能捕获到项目数据。请确保编辑区有内容，并已点击保存弹窗中的「保存」按钮'));
       }
-      if (waited > 2500) {
-        clearInterval(timer);
-        if (cb) cb(new Error('未能捕获到项目数据，请确保编辑器中有内容后重试'));
-      }
-    }, 80);
+    }, 30000);
   }
   function deleteDraft(id) {
     var drafts = getDrafts().filter(function (d) { return d.id !== id; });
@@ -158,7 +208,13 @@
     var draft = getDrafts().find(function (d) { return d.id === id; });
     if (!draft) return;
     var input = document.querySelector('input[type="file"][accept*=".mdoc"]');
-    if (!input) { alert('未找到文件输入框，无法加载草稿'); return; }
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.mdoc,application/json';
+      input.style.display = 'none';
+      document.body.appendChild(input);
+    }
     var blob = new Blob([draft.content], { type: 'application/json' });
     var file = new File([blob], draft.name + '.mdoc', { type: 'application/json' });
     var dt = new DataTransfer();
@@ -212,23 +268,26 @@
           '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8V3"></path></svg>',
           '保存当前为草稿',
         '</button>',
+        '<div id="draft-box-hint" style="margin-top:8px;font-size:11px;color:var(--muted);line-height:1.4;display:none;">已开启捕获，请在弹出的保存窗口中点击「保存」，系统将自动把项目存为草稿。</div>',
       '</div>',
       '<div id="draft-box-list" style="flex:1;overflow:auto;padding:6px;"></div>',
     ].join('');
     document.body.appendChild(panel);
 
     var saveBtn = panel.querySelector('#draft-box-save');
+    var hint = panel.querySelector('#draft-box-hint');
     saveBtn.addEventListener('click', function () {
       saveBtn.disabled = true;
-      saveBtn.innerHTML = '保存中…';
+      var originalHtml = saveBtn.innerHTML;
+      saveBtn.innerHTML = '等待保存…';
+      hint.style.display = 'block';
       saveCurrentDraft(function (err) {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = [
-          '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8V3"></path></svg>',
-          '保存当前为草稿'
-        ].join('');
+        saveBtn.innerHTML = originalHtml;
+        hint.style.display = 'none';
         if (err) { alert(err.message); return; }
         renderList();
+        showPosterToast('草稿已保存', 'success');
       });
     });
 
@@ -252,16 +311,16 @@
       row.innerHTML = [
         '<div style="flex:1;min-width:0;">',
           '<div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;">' + escapeHtml(d.name) + '</div>',
-          '<div style="font-size:11px;color:var(--muted);margin-top:2px;">' + formatTime(d.createdAt) + ' · ' + formatSize(d.size) + '</div>',
+          '<div style="font-size:11px;color:var(--muted);margin-top:2px;">' + formatTime(d.createdAt) + ' \xb7 ' + formatSize(d.size) + '</div>',
         '</div>',
-        '<button class="draft-load" data-id="' + d.id + '" style="flex-shrink:0;height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-size:11px;cursor:pointer;">加载</button>',
-        '<button class="draft-del" data-id="' + d.id + '" style="flex-shrink:0;width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;" title="删除">',
+        '<button class="draft-load" data-id="' + d.id + '" style="flex-shrink:0;height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-size:11px;cursor:pointer;">\u52a0\u8f7d</button>',
+        '<button class="draft-del" data-id="' + d.id + '" style="flex-shrink:0;width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;" title="\u5220\u9664">',
           '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>',
         '</button>'
       ].join('');
       row.querySelector('.draft-load').addEventListener('click', function () { loadDraft(this.getAttribute('data-id')); });
       row.querySelector('.draft-del').addEventListener('click', function () {
-        if (confirm('确定删除该草稿吗？')) { deleteDraft(this.getAttribute('data-id')); renderList(); }
+        if (confirm('\u786e\u5b9a\u5220\u9664\u8be5\u8349\u7a3f\u5417\uff1f')) { deleteDraft(this.getAttribute('data-id')); renderList(); }
       });
       listRoot.appendChild(row);
     });
@@ -309,7 +368,6 @@
 
     var parent = saveBtn.parentElement;
     if (parent && parent.parentElement === header.children[1]) {
-      // 保存文件按钮在第二个 flex 容器里，插入到它前面
       parent.parentElement.insertBefore(wrapper, parent);
     } else {
       header.children[1].appendChild(wrapper);
@@ -324,26 +382,7 @@
     window.addEventListener('resize', positionPanel);
   }
 
-  // ===================== 等待应用挂载后注入 =====================
-  function tryInject() {
-    if (document.querySelector('#poster-draft-btn')) return;
-    if (document.querySelector('header') && findButtonByText(['保存文件'])) {
-      injectDraftButton();
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { setTimeout(tryInject, 300); });
-  } else {
-    setTimeout(tryInject, 300);
-  }
-  var injectTimer = setInterval(function () {
-    tryInject();
-    if (document.querySelector('#poster-draft-btn')) clearInterval(injectTimer);
-  }, 800);
-  setTimeout(function () { clearInterval(injectTimer); }, 15000);
-})();
-  // ===================== 模板/组件导入增强：支持 .mdoc/.json 并自动转换 =====================
+  // ===================== 模板/组件导入增强 =====================
   function showPosterToast(message, type) {
     var existing = document.getElementById('poster-toast');
     if (existing) existing.remove();
@@ -446,9 +485,9 @@
       var savedTpl = saveTemplateSeeds(tplSeeds);
       var savedCmp = saveComponentSeeds(cmpSeeds);
       var parts = [];
-      if (savedTpl) parts.push(savedTpl + ' 个模板');
-      if (savedCmp) parts.push(savedCmp + ' 个组件');
-      showPosterToast('已导入 ' + parts.join('、') + '，即将刷新…', 'success');
+      if (savedTpl) parts.push(savedTpl + ' \u4e2a\u6a21\u677f');
+      if (savedCmp) parts.push(savedCmp + ' \u4e2a\u7ec4\u4ef6');
+      showPosterToast('\u5df2\u5bfc\u5165 ' + parts.join('\u3001') + '\uff0c\u5373\u5c06\u5237\u65b0\u2026', 'success');
       setTimeout(function () { location.reload(); }, 1200);
     };
     reader.onerror = function () {
@@ -477,16 +516,14 @@
       if (!el || el.tagName !== 'BUTTON') return;
       var text = (el.textContent || '').trim();
       var title = (el.getAttribute('title') || '').toLowerCase();
-      // Match the native "导入" button in template/component panels
-      if (text !== '导入') return;
-      if (title.indexOf('json') === -1 && title.indexOf('导入') === -1) return;
-      // Heuristic: must be near an "导出种子" button
+      if (text !== '\u5bfc\u5165') return;
+      if (title.indexOf('json') === -1 && title.indexOf('\u5bfc\u5165') === -1) return;
       var parent = el.parentElement;
       var hasExportSeed = false;
       if (parent) {
         var siblings = parent.querySelectorAll('button');
         for (var i = 0; i < siblings.length; i++) {
-          if ((siblings[i].textContent || '').trim() === '导出种子') { hasExportSeed = true; break; }
+          if ((siblings[i].textContent || '').trim() === '\u5bfc\u51fa\u79cd\u5b50') { hasExportSeed = true; break; }
         }
       }
       if (!hasExportSeed) return;
@@ -496,8 +533,25 @@
     }, true);
   }
 
-  // Run after initial mount
-  setTimeout(injectImportFix, 800);
+  // ===================== 等待应用挂载后注入 =====================
+  function tryInject() {
+    if (document.querySelector('#poster-draft-btn')) return;
+    if (document.querySelector('header') && findButtonByText(['保存文件'])) {
+      injectDraftButton();
+      injectImportFix();
+    }
+  }
 
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { setTimeout(tryInject, 300); });
+  } else {
+    setTimeout(tryInject, 300);
+  }
+  var injectTimer = setInterval(function () {
+    tryInject();
+    if (document.querySelector('#poster-draft-btn')) clearInterval(injectTimer);
+  }, 800);
+  setTimeout(function () { clearInterval(injectTimer); }, 15000);
+})();
 </script>
 </body></html>
