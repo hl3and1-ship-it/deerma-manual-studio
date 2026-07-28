@@ -417,25 +417,6 @@
     .fab-layout i { color: #c62828; font-size: 16px; }
     .fab-layout:hover i { color: #b71c1c !important; }
 
-    /* 多语言排版 内嵌面板 */
-    .ml-panel { z-index: 12000; background: rgba(15,23,42,0.55); padding: 2vh 2vw; }
-    .ml-dialog { width: 100%; height: 100%; background: #fff; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transform: translateY(20px); transition: transform 0.22s ease; }
-    .ml-panel.show .ml-dialog { transform: translateY(0); }
-    .ml-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: linear-gradient(135deg, #e53935, #c62828); color: #fff; flex-shrink: 0; }
-    .ml-bar-title { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-    .ml-bar-actions { display: flex; align-items: center; gap: 10px; }
-    .ml-bar-link { background: rgba(255,255,255,0.18); color: #fff; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
-    .ml-bar-link:hover { background: rgba(255,255,255,0.30); }
-    .ml-bar-close { background: rgba(255,255,255,0.18); color: #fff; border: none; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-    .ml-bar-close:hover { background: rgba(255,255,255,0.30); }
-    .ml-frame-wrap { position: relative; flex: 1; background: #f3f4f6; min-height: 0; }
-    .ml-frame { width: 100%; height: 100%; border: none; display: block; }
-    .ml-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #9ca3af; font-size: 14px; background: #fff; text-align: center; padding: 20px; }
-    .ml-loading i { font-size: 34px; color: #e53935; animation: ml-spin 1s linear infinite; }
-    .ml-loading .ml-fallback-btn { margin-top: 6px; background: #e53935; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
-    .ml-loading .ml-fallback-btn:hover { background: #c62828; }
-    @keyframes ml-spin { to { transform: rotate(360deg); } }
-
     /* ===== Modal ===== */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 11000; background: rgba(15,23,42,0.35);
@@ -1916,8 +1897,8 @@
     </div>
   </div>
 
-  <!-- 悬浮：多语言排版（位于新品说明书上方，内嵌 Poster Editor） -->
-  <button class="fab-layout" id="fabLayoutBtn" onclick="openMultilingualLayout()">
+  <!-- 悬浮：多语言排版（位于新品说明书上方） -->
+  <button class="fab-layout" id="fabLayoutBtn" onclick="window.open(EDIT_MANUAL_URL,'_blank')">
     <i class="ti ti-language"></i> 多语言排版
   </button>
   <!-- 悬浮编辑按钮（位于新建按钮上方） -->
@@ -1928,23 +1909,6 @@
   <button class="fab-new" onclick="openTypeSelectModal()">
     <i class="ti ti-plus"></i> 旧品说明书
   </button>
-</div>
-
-<!-- ===== 多语言排版 内嵌面板（克隆自 Poster Editor） ===== -->
-<div class="modal-overlay ml-panel" id="mlEmbedPanel" onclick="if(event.target===this)closeMultilingualLayout()">
-  <div class="ml-dialog">
-    <div class="ml-bar">
-      <div class="ml-bar-title"><i class="ti ti-language"></i> 多语言排版 · Manual Design</div>
-      <div class="ml-bar-actions">
-        <button class="ml-bar-link" onclick="window.open(ML_EDITOR_URL,'_blank')"><i class="ti ti-external-link"></i> 新标签页打开</button>
-        <button class="ml-bar-close" onclick="closeMultilingualLayout()" title="关闭"><i class="ti ti-x"></i></button>
-      </div>
-    </div>
-    <div class="ml-frame-wrap">
-      <div class="ml-loading" id="mlLoading"><i class="ti ti-loader-2"></i><span>正在加载多语言排版编辑器…</span></div>
-      <iframe id="mlFrame" class="ml-frame" src="about:blank" onload="onMlFrameLoad()" allow="fullscreen" referrerpolicy="no-referrer"></iframe>
-    </div>
-  </div>
 </div>
 
 <!-- ===== 新建项目弹窗 ===== -->
@@ -10110,41 +10074,6 @@ function handleEditManual() {
   } else {
     showToast('编辑说明书的跳转地址尚未配置，请稍后再试', 'warning');
   }
-}
-
-/* ===== 多语言排版：克隆 Poster Editor 并内嵌到平台 ===== */
-const ML_EDITOR_URL = 'https://bb7ceb243aae44dcad79cc8c7f06839e.app.codebuddy.work/';
-let _mlLoadTimer = null;
-function openMultilingualLayout() {
-  const panel = document.getElementById('mlEmbedPanel');
-  const frame = document.getElementById('mlFrame');
-  const loading = document.getElementById('mlLoading');
-  loading.style.display = 'flex';
-  loading.innerHTML = '<i class="ti ti-loader-2"></i><span>正在加载多语言排版编辑器…</span>';
-  // 懒加载：仅在首次打开时设置 src，避免一进页面就拉取重型 Next.js 应用
-  if (!frame.getAttribute('data-loaded')) {
-    frame.src = ML_EDITOR_URL;
-  }
-  panel.classList.add('show');
-  // 兜底：若预览环境禁止内嵌（X-Frame-Options / 登录拦截），超时后给出新标签页打开入口
-  clearTimeout(_mlLoadTimer);
-  _mlLoadTimer = setTimeout(function () {
-    if (!frame.getAttribute('data-loaded')) {
-      loading.innerHTML = '<i class="ti ti-alert-triangle"></i>' +
-        '<span>无法在当前窗口内嵌加载（可能是预览环境限制）。</span>' +
-        '<button class="ml-fallback-btn" onclick="window.open(\'' + ML_EDITOR_URL + '\',\'_blank\')"><i class="ti ti-external-link"></i> 在新标签页打开</button>';
-    }
-  }, 12000);
-}
-function onMlFrameLoad() {
-  const frame = document.getElementById('mlFrame');
-  frame.setAttribute('data-loaded', '1');
-  document.getElementById('mlLoading').style.display = 'none';
-  clearTimeout(_mlLoadTimer);
-}
-function closeMultilingualLayout() {
-  document.getElementById('mlEmbedPanel').classList.remove('show');
-  // 保留 iframe src，便于下次秒开；如需释放资源可改为 frame.src='about:blank'
 }
 
 function openTypeSelectModal() {
