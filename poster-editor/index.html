@@ -351,6 +351,26 @@
     panel.style.top = (rect.bottom + 6) + 'px';
   }
 
+  // ===================== 返回首页按钮 =====================
+  function injectHomeButton() {
+    if (document.getElementById('poster-home-btn')) return;
+    var templateBtn = document.querySelector('header button[title="保存为模板"]');
+    if (!templateBtn) return;
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'relative';
+    wrapper.innerHTML = '<button type="button" title="返回首页" class="flex items-center gap-1 h-8 px-2 rounded-md border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--ink)] text-[12px] hover:bg-[color:var(--surface)] transition-colors" id="poster-home-btn"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span class="hidden sm:inline">返回首页</span></button>';
+    var homeBtn = wrapper.querySelector('#poster-home-btn');
+    homeBtn.addEventListener('click', function () {
+      window.location.href = '../';
+    });
+
+    var parent = templateBtn.parentElement;
+    if (parent && parent.parentElement) {
+      parent.parentElement.insertBefore(wrapper, parent);
+    }
+  }
+
   // ===================== 注入工具栏按钮 =====================
   var draftBtn = null;
   function injectDraftButton() {
@@ -535,8 +555,9 @@
 
   // ===================== 等待应用挂载后注入 =====================
   function tryInject() {
-    if (document.querySelector('#poster-draft-btn')) return;
+    if (document.querySelector('#poster-draft-btn') && document.getElementById('poster-home-btn')) return;
     if (document.querySelector('header') && findButtonByText(['保存文件'])) {
+      injectHomeButton();
       injectDraftButton();
       injectImportFix();
     }
@@ -549,7 +570,7 @@
   }
   var injectTimer = setInterval(function () {
     tryInject();
-    if (document.querySelector('#poster-draft-btn')) clearInterval(injectTimer);
+    if (document.querySelector('#poster-draft-btn') && document.getElementById('poster-home-btn')) clearInterval(injectTimer);
   }, 800);
   setTimeout(function () { clearInterval(injectTimer); }, 15000);
 })();
