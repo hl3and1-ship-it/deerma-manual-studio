@@ -343,5 +343,161 @@
   }, 800);
   setTimeout(function () { clearInterval(injectTimer); }, 15000);
 })();
+  // ===================== 模板/组件导入增强：支持 .mdoc/.json 并自动转换 =====================
+  function showPosterToast(message, type) {
+    var existing = document.getElementById('poster-toast');
+    if (existing) existing.remove();
+    var el = document.createElement('div');
+    el.id = 'poster-toast';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:20000;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;background:' + (type === 'error' ? '#c62828' : '#2e7d32') + ';box-shadow:0 8px 24px rgba(0,0,0,0.2);';
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(function () { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function () { el.remove(); }, 300); }, 3000);
+  }
+
+  function parseImportJson(text) {
+    try { return JSON.parse(text); } catch (e) { return null; }
+  }
+
+  function convertToTemplateSeed(item) {
+    if (!item || typeof item !== 'object') return null;
+    var doc = item.doc || item;
+    if (!doc || !Array.isArray(doc.pages)) return null;
+    return {
+      id: 'tpl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+      name: (item.name || 'Imported template').toString().trim() || 'Imported template',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      doc: {
+        pages: doc.pages,
+        pageStandard: doc.pageStandard,
+        canvasSettings: doc.canvasSettings,
+        dpi: doc.dpi || 300,
+        colorMode: doc.colorMode || 'rgb',
+        cmykProfile: doc.cmykProfile,
+        rgbProfile: doc.rgbProfile,
+        settingsLocked: !!doc.settingsLocked
+      }
+    };
+  }
+
+  function convertToComponentSeed(item) {
+    if (!item || typeof item !== 'object') return null;
+    var elements = item.elements || (item.doc && item.doc.elements);
+    if (!Array.isArray(elements) || elements.length === 0) return null;
+    return {
+      id: 'cmp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+      name: (item.name || 'Imported component').toString().trim() || 'Imported component',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      elements: elements
+    };
+  }
+
+  function saveTemplateSeeds(seeds) {
+    if (!seeds || seeds.length === 0) return 0;
+    var key = 'manual-design:project-templates';
+    var arr = [];
+    try {
+      var raw = localStorage.getItem(key);
+      arr = raw ? JSON.parse(raw) : [];
+    } catch (e) { arr = []; }
+    if (!Array.isArray(arr)) arr = [];
+    for (var i = 0; i < seeds.length; i++) arr.push(seeds[i]);
+    localStorage.setItem(key, JSON.stringify(arr));
+    return seeds.length;
+  }
+
+  function saveComponentSeeds(seeds) {
+    if (!seeds || seeds.length === 0) return 0;
+    var key = 'manual-design:components';
+    var arr = [];
+    try {
+      var raw = localStorage.getItem(key);
+      arr = raw ? JSON.parse(raw) : [];
+    } catch (e) { arr = []; }
+    if (!Array.isArray(arr)) arr = [];
+    for (var i = 0; i < seeds.length; i++) arr.push(seeds[i]);
+    localStorage.setItem(key, JSON.stringify(arr));
+    return seeds.length;
+  }
+
+  function processImportFile(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data = parseImportJson(reader.result);
+      if (!data) {
+        showPosterToast('导入失败：文件不是有效的 JSON', 'error');
+        return;
+      }
+      var items = Array.isArray(data) ? data : [data];
+      var tplSeeds = [];
+      var cmpSeeds = [];
+      for (var i = 0; i < items.length; i++) {
+        var tpl = convertToTemplateSeed(items[i]);
+        if (tpl) tplSeeds.push(tpl);
+        var cmp = convertToComponentSeed(items[i]);
+        if (cmp) cmpSeeds.push(cmp);
+      }
+      if (tplSeeds.length === 0 && cmpSeeds.length === 0) {
+        showPosterToast('导入失败：未找到有效的模板或组件数据', 'error');
+        return;
+      }
+      var savedTpl = saveTemplateSeeds(tplSeeds);
+      var savedCmp = saveComponentSeeds(cmpSeeds);
+      var parts = [];
+      if (savedTpl) parts.push(savedTpl + ' 个模板');
+      if (savedCmp) parts.push(savedCmp + ' 个组件');
+      showPosterToast('已导入 ' + parts.join('、') + '，即将刷新…', 'success');
+      setTimeout(function () { location.reload(); }, 1200);
+    };
+    reader.onerror = function () {
+      showPosterToast('读取文件失败', 'error');
+    };
+    reader.readAsText(file);
+  }
+
+  function injectImportFix() {
+    if (document.getElementById('poster-import-fix-input')) return;
+    var input = document.createElement('input');
+    input.id = 'poster-import-fix-input';
+    input.type = 'file';
+    input.accept = '.json,.mdoc,application/json';
+    input.className = 'hidden';
+    input.style.display = 'none';
+    input.addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      input.value = '';
+      if (file) processImportFile(file);
+    });
+    document.body.appendChild(input);
+
+    document.addEventListener('click', function (e) {
+      var el = e.target;
+      if (!el || el.tagName !== 'BUTTON') return;
+      var text = (el.textContent || '').trim();
+      var title = (el.getAttribute('title') || '').toLowerCase();
+      // Match the native "导入" button in template/component panels
+      if (text !== '导入') return;
+      if (title.indexOf('json') === -1 && title.indexOf('导入') === -1) return;
+      // Heuristic: must be near an "导出种子" button
+      var parent = el.parentElement;
+      var hasExportSeed = false;
+      if (parent) {
+        var siblings = parent.querySelectorAll('button');
+        for (var i = 0; i < siblings.length; i++) {
+          if ((siblings[i].textContent || '').trim() === '导出种子') { hasExportSeed = true; break; }
+        }
+      }
+      if (!hasExportSeed) return;
+      e.preventDefault();
+      e.stopPropagation();
+      input.click();
+    }, true);
+  }
+
+  // Run after initial mount
+  setTimeout(injectImportFix, 800);
+
 </script>
 </body></html>

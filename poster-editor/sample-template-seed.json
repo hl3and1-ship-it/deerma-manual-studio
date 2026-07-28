@@ -1,0 +1,26 @@
+[
+  {
+    "id": "tpl_sample_blank",
+    "name": "示例模板（空白画布）",
+    "createdAt": "2026-07-28T00:00:00.000Z",
+    "updatedAt": "2026-07-28T00:00:00.000Z",
+    "doc": {
+      "pages": [
+        {
+          "id": "page_1",
+          "name": "Page 1",
+          "ratio": "1683:1240",
+          "width": 1683,
+          "height": 1240,
+          "background": "#ffffff",
+          "elements": []
+        }
+      ],
+      "pageStandard": "custom",
+      "canvasSettings": {},
+      "dpi": 300,
+      "colorMode": "rgb",
+      "settingsLocked": false
+    }
+  }
+]
