@@ -1911,11 +1911,11 @@
   </div>
 
   <!-- 悬浮：包装效果图（嵌入的 packaging-design 工具，位于多语言排版上方） -->
-  <button class="fab-packaging" id="fabPackagingBtn" onclick="window.location.href='https://hl3and1-ship-it.github.io/deerma-manual-studio/packaging-design/'">
+  <button class="fab-packaging" id="fabPackagingBtn" onclick="window.open('https://hl3and1-ship-it.github.io/deerma-manual-studio/packaging-design/','_blank')">
     <i class="ti ti-package"></i> 包装效果图
   </button>
   <!-- 悬浮：多语言排版（平台内克隆的 Poster Editor，位于新品说明书上方） -->
-  <button class="fab-layout" id="fabLayoutBtn" onclick="window.location.href='https://hl3and1-ship-it.github.io/deerma-manual-studio/poster-editor/'">
+  <button class="fab-layout" id="fabLayoutBtn" onclick="window.open('https://hl3and1-ship-it.github.io/deerma-manual-studio/poster-editor/','_blank')">
     <i class="ti ti-language"></i> 多语言排版
   </button>
   <!-- 悬浮编辑按钮（位于新建按钮上方） -->
@@ -1923,7 +1923,7 @@
     <i class="ti ti-pencil"></i> 新品说明书
   </button>
   <!-- 悬浮新建按钮 -->
-  <button class="fab-new" onclick="openTypeSelectModal()">
+  <button class="fab-new" onclick="window.open('?action=new','_blank')">
     <i class="ti ti-plus"></i> 旧品说明书
   </button>
 </div>
@@ -12121,5 +12121,28 @@ init();
     <button class="toolbar-btn" id="ftDelete" title="删除 (Delete)" onclick="deleteSelected()"><i class="ti ti-trash"></i></button>
   </div>
 </div>
+
+<!-- 旧品说明书：以 ?action=new 在新窗口打开时，自动弹出「新建说明书」弹窗 -->
+<script>
+  (function () {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('action') === 'new') {
+        function openModal() {
+          if (typeof openTypeSelectModal === 'function') {
+            openTypeSelectModal();
+          } else {
+            setTimeout(openModal, 150);
+          }
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', openModal);
+        } else {
+          openModal();
+        }
+      }
+    } catch (e) {}
+  })();
+</script>
 </body>
 </html>
