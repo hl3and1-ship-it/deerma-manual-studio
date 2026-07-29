@@ -42,42 +42,9 @@
   };
 
   // ===================== 下载锚点捕获 =====================
-  var pendingMdocName = null;
-  var pendingMdocUrl = null;
   var captureMode = false;
   var captureTimer = null;
   var captureCallback = null;
-  var originalCreateElement = document.createElement;
-  document.createElement = function (tagName, options) {
-    var el = originalCreateElement.call(document, tagName, options);
-    if (tagName && tagName.toLowerCase && tagName.toLowerCase() === 'a') {
-      var downloadValue = '';
-      var hrefValue = '';
-      try {
-        Object.defineProperty(el, 'download', {
-          configurable: true,
-          get: function () { return downloadValue; },
-          set: function (v) {
-            downloadValue = String(v || '');
-            if (downloadValue.toLowerCase().endsWith('.mdoc')) {
-              pendingMdocName = downloadValue;
-            }
-          }
-        });
-        Object.defineProperty(el, 'href', {
-          configurable: true,
-          get: function () { return hrefValue; },
-          set: function (v) {
-            hrefValue = String(v || '');
-            if (downloadValue.toLowerCase().endsWith('.mdoc') && hrefValue.indexOf('blob:') === 0) {
-              pendingMdocUrl = hrefValue;
-            }
-          }
-        });
-      } catch (e) {}
-    }
-    return el;
-  };
 
   var originalClick = HTMLElement.prototype.click;
   HTMLElement.prototype.click = function () {
@@ -100,10 +67,10 @@
     if (typeof url === 'string' && url.indexOf('blob:') === 0) {
       var blob = BLOB_MAP.get(url);
       if (captureMode && blob) {
-        finishCapture(blob, pendingMdocName || 'Untitled.mdoc');
+        finishCapture(blob, 'Untitled.mdoc');
         return null;
       }
-      if (blob) captureMdocBlob(blob, pendingMdocName || 'Untitled.mdoc');
+      if (blob) captureMdocBlob(blob, 'Untitled.mdoc');
     }
     return originalOpen.apply(window, arguments);
   };
