@@ -373,8 +373,9 @@
 
   // ===================== 注入工具栏按钮 =====================
   var draftBtn = null;
+  var draftListenersAdded = false;
   function injectDraftButton() {
-    if (draftBtn) return;
+    if (draftBtn && document.contains(draftBtn)) return;
     var header = document.querySelector('header');
     if (!header) return;
     var saveBtn = findButtonByText(['保存文件']);
@@ -393,13 +394,15 @@
       header.children[1].appendChild(wrapper);
     }
 
-    document.addEventListener('click', function (e) {
-      if (panel && panel.style.display === 'flex' && !panel.contains(e.target) && e.target !== draftBtn && !draftBtn.contains(e.target)) {
-        closePanel();
-      }
-    });
-
-    window.addEventListener('resize', positionPanel);
+    if (!draftListenersAdded) {
+      draftListenersAdded = true;
+      document.addEventListener('click', function (e) {
+        if (panel && panel.style.display === 'flex' && !panel.contains(e.target) && e.target !== draftBtn && !draftBtn.contains(e.target)) {
+          closePanel();
+        }
+      });
+      window.addEventListener('resize', positionPanel);
+    }
   }
 
   // ===================== 模板/组件导入增强 =====================
@@ -553,13 +556,40 @@
     }, true);
   }
 
+  // ===================== 持续守护（防 React 重渲染清除注入按钮）=====================
+  var headerObserver = null;
+  var headerObserveTimer = null;
+  function ensureInjectedButtons() {
+    injectHomeButton();
+    injectDraftButton();
+    injectImportFix();
+  }
+  function observeHeader() {
+    if (headerObserver) return;
+    var header = document.querySelector('header');
+    if (!header) return;
+    headerObserver = new MutationObserver(function (mutations) {
+      if (headerObserveTimer) clearTimeout(headerObserveTimer);
+      headerObserveTimer = setTimeout(function () {
+        if (!document.getElementById('poster-home-btn') || !(draftBtn && document.contains(draftBtn))) {
+          ensureInjectedButtons();
+        }
+      }, 50);
+    });
+    headerObserver.observe(header, { childList: true, subtree: true });
+  }
+
   // ===================== 等待应用挂载后注入 =====================
   function tryInject() {
-    if (document.querySelector('#poster-draft-btn') && document.getElementById('poster-home-btn')) return;
+    var homeExists = !!document.getElementById('poster-home-btn');
+    var draftExists = !!(draftBtn && document.contains(draftBtn));
+    if (homeExists && draftExists) {
+      observeHeader();
+      return;
+    }
     if (document.querySelector('header') && findButtonByText(['保存文件'])) {
-      injectHomeButton();
-      injectDraftButton();
-      injectImportFix();
+      ensureInjectedButtons();
+      observeHeader();
     }
   }
 
@@ -570,7 +600,9 @@
   }
   var injectTimer = setInterval(function () {
     tryInject();
-    if (document.querySelector('#poster-draft-btn') && document.getElementById('poster-home-btn')) clearInterval(injectTimer);
+    var homeExists = !!document.getElementById('poster-home-btn');
+    var draftExists = !!(draftBtn && document.contains(draftBtn));
+    if (homeExists && draftExists && headerObserver) clearInterval(injectTimer);
   }, 800);
   setTimeout(function () { clearInterval(injectTimer); }, 15000);
 })();
