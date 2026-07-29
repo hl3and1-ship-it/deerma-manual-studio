@@ -46,18 +46,32 @@
   var captureTimer = null;
   var captureCallback = null;
 
+  // ===================== 选择文件夹导出 =====================
+  var suppressMenuClick = false;
+  var folderExportDir = null;
+  var folderExportFormat = null;
+
   var originalClick = HTMLElement.prototype.click;
   HTMLElement.prototype.click = function () {
     var a = this;
-    if (a.tagName === 'A' && a.download && a.download.toLowerCase().endsWith('.mdoc')) {
-      var url = a.href;
-      var name = a.download;
-      var blob = BLOB_MAP.get(url);
-      if (captureMode && blob) {
-        finishCapture(blob, name);
+    if (a.tagName === 'A' && a.download) {
+      var dl = a.download.toLowerCase();
+      if (folderExportDir && (dl.endsWith('.png') || dl.endsWith('.svg') || dl.endsWith('.pdf'))) {
+        var url = a.href;
+        var dir = folderExportDir;
+        folderExportDir = null;
+        folderExportFormat = null;
+        handleFolderExport(url, a.download, dir);
         return;
       }
-      if (blob) captureMdocBlob(blob, name);
+      if (dl.endsWith('.mdoc')) {
+        var blob = BLOB_MAP.get(a.href);
+        if (captureMode && blob) {
+          finishCapture(blob, a.download);
+          return;
+        }
+        if (blob) captureMdocBlob(blob, a.download);
+      }
     }
     return originalClick.call(this);
   };
@@ -74,6 +88,116 @@
     }
     return originalOpen.apply(window, arguments);
   };
+
+  // ===================== 选择文件夹导出逻辑 =====================
+  var EXPORT_FORMATS = ['PNG', 'SVG', 'PDF'];
+
+  function isExportButton(btn) {
+    if (!btn || btn.tagName !== 'BUTTON') return false;
+    if (!btn.closest('header')) return false;
+    var t = (btn.textContent || '').trim().toUpperCase();
+    return EXPORT_FORMATS.indexOf(t) !== -1;
+  }
+
+  document.addEventListener('click', function (e) {
+    if (suppressMenuClick) { suppressMenuClick = false; return; }
+    var btn = e.target.closest ? e.target.closest('button') : null;
+    if (!isExportButton(btn)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showExportMenu(btn, (btn.textContent || '').trim().toUpperCase());
+  }, true);
+
+  function removeExportMenu() {
+    var m = document.getElementById('export-folder-menu');
+    if (m) m.remove();
+  }
+
+  function showExportMenu(button, format) {
+    removeExportMenu();
+    var menu = document.createElement('div');
+    menu.id = 'export-folder-menu';
+    menu.style.cssText = 'position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,0.18);padding:4px;min-width:180px;font-size:13px;color:var(--ink);';
+    var rect = button.getBoundingClientRect();
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.left = Math.max(8, rect.left) + 'px';
+    menu.innerHTML = [
+      '<div style="padding:6px 10px;font-size:11px;color:var(--muted);">导出 ' + format + '</div>',
+      '<button data-act="download" style="display:flex;width:100%;align-items:center;gap:8px;padding:8px 10px;border:none;background:transparent;color:var(--ink);font-size:13px;cursor:pointer;border-radius:6px;text-align:left;">下载到默认位置</button>',
+      '<button data-act="folder" style="display:flex;width:100%;align-items:center;gap:8px;padding:8px 10px;border:none;background:transparent;color:var(--ink);font-size:13px;cursor:pointer;border-radius:6px;text-align:left;">选择文件夹导出…</button>'
+    ].join('');
+    document.body.appendChild(menu);
+
+    menu.querySelector('[data-act="download"]').addEventListener('click', function () {
+      removeExportMenu();
+      suppressMenuClick = true;
+      button.click();
+    });
+    menu.querySelector('[data-act="folder"]').addEventListener('click', function () {
+      removeExportMenu();
+      if (!window.showDirectoryPicker) {
+        showPosterToast('当前浏览器不支持选择文件夹，已改为普通下载', 'error');
+        suppressMenuClick = true;
+        button.click();
+        return;
+      }
+      window.showDirectoryPicker().then(function (dirHandle) {
+        folderExportDir = dirHandle;
+        folderExportFormat = format;
+        suppressMenuClick = true;
+        button.click();
+      }).catch(function (err) {
+        if (err && err.name !== 'AbortError') {
+          showPosterToast('选择文件夹失败：' + (err.message || err), 'error');
+        }
+      });
+    });
+
+    setTimeout(function () {
+      document.addEventListener('click', function closeMenu(ev) {
+        if (!menu.contains(ev.target)) {
+          removeExportMenu();
+          document.removeEventListener('click', closeMenu);
+        }
+      }, true);
+    }, 0);
+  }
+
+  function handleFolderExport(url, filename, dirHandle) {
+    showPosterToast('正在导出到文件夹…', 'success');
+    var extMatch = /\.[^.]+$/.exec(filename);
+    var ext = extMatch ? extMatch[0] : '';
+    var base = ext ? filename.slice(0, -ext.length) : filename;
+    var d = new Date();
+    var pad = function (n) { return n < 10 ? '0' + n : n; };
+    var ts = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+    var outName = base + '_' + ts + ext;
+    var done = function (blob) {
+      if (!blob) { showPosterToast('导出失败：无法读取文件数据', 'error'); return; }
+      writeBlobToFolder(blob, outName, dirHandle);
+    };
+    if (url.indexOf('blob:') === 0) {
+      var blob = BLOB_MAP.get(url);
+      if (blob) { done(blob); return; }
+      fetch(url).then(function (r) { return r.blob(); }).then(done).catch(function () { showPosterToast('导出失败：无法读取文件数据', 'error'); });
+    } else if (url.indexOf('data:') === 0) {
+      fetch(url).then(function (r) { return r.blob(); }).then(done).catch(function () { showPosterToast('导出失败：无法读取文件数据', 'error'); });
+    } else {
+      showPosterToast('导出失败：未知的文件地址', 'error');
+    }
+  }
+
+  function writeBlobToFolder(blob, filename, dirHandle) {
+    dirHandle.getFileHandle(filename, { create: true }).then(function (fileHandle) {
+      return fileHandle.createWritable().then(function (writable) {
+        return writable.write(blob).then(function () { return writable.close(); });
+      });
+    }).then(function () {
+      showPosterToast('已导出到文件夹：' + filename, 'success');
+    }).catch(function (err) {
+      showPosterToast('写入文件夹失败：' + (err && err.message || err), 'error');
+    });
+  }
 
   function captureMdocBlob(blob, filename) {
     if (!blob) return;
