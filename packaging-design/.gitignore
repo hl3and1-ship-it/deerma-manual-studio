@@ -1,0 +1,5 @@
+# macOS
+.DS_Store
+
+# 与网页版无关的 Electron 二进制目录
+mac-arm64/

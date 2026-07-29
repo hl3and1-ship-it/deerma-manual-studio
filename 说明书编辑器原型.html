@@ -417,6 +417,19 @@
     .fab-layout i { color: #c62828; font-size: 16px; }
     .fab-layout:hover i { color: #b71c1c !important; }
 
+    /* 包装效果图按钮（位于多语言排版上方） */
+    .fab-packaging {
+      position: fixed; bottom: 208px; right: 44px; z-index: 10001;
+      background: linear-gradient(135deg, #fecdd3 0%, #fff1f2 50%, #fef2f2 100%); color: #1a1a2e; border: none; border-radius: 14px;
+      padding: 13px 26px; font-size: 14px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(229,57,53,0.18), 0 0 40px rgba(229,57,53,0.08);
+      display: flex; align-items: center; gap: 8px; transition: all 0.25s ease;
+    }
+    .fab-packaging:hover { transform: translateY(-2px); background: linear-gradient(135deg, #fca5a5 0%, #fee2e2 50%, #fecaca 100%); box-shadow: 0 8px 28px rgba(229,57,53,0.25), 0 0 56px rgba(229,57,53,0.12); }
+    .fab-packaging:active { transform: translateY(0); }
+    .fab-packaging i { color: #c62828; font-size: 16px; }
+    .fab-packaging:hover i { color: #b71c1c !important; }
+
     /* ===== Modal ===== */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 11000; background: rgba(15,23,42,0.35);
@@ -1897,6 +1910,10 @@
     </div>
   </div>
 
+  <!-- 悬浮：包装效果图（嵌入的 packaging-design 工具，位于多语言排版上方） -->
+  <button class="fab-packaging" id="fabPackagingBtn" onclick="window.location.href='https://hl3and1-ship-it.github.io/deerma-manual-studio/packaging-design/'">
+    <i class="ti ti-package"></i> 包装效果图
+  </button>
   <!-- 悬浮：多语言排版（平台内克隆的 Poster Editor，位于新品说明书上方） -->
   <button class="fab-layout" id="fabLayoutBtn" onclick="window.location.href='https://hl3and1-ship-it.github.io/deerma-manual-studio/poster-editor/'">
     <i class="ti ti-language"></i> 多语言排版

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Packaging Design</title>
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/app-icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./assets/app-icon-512.png" />
+    <script src="./bridge.js"></script>
+<script src="./viewer-controls.js"></script>
+<style id="pd-viewer-style">
+/* 按钮组：绝对定位于 3D 预览容器(.mockup-canvas)左上角，不遮挡画面主体 */
+#pd-viewer-controls {
+  position: absolute;
+  z-index: 20;
+  top: 12px;
+  left: 12px;
+  transform: none;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  padding: 5px;
+  background: rgba(255,255,255,0.92);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  backdrop-filter: blur(6px);
+}
+#pd-viewer-controls button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: #E5301E;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s, opacity 0.12s;
+}
+#pd-viewer-controls button:hover { opacity: 0.9; transform: scale(1.06); }
+#pd-viewer-controls button:active { transform: scale(0.95); }
+#pd-viewer-controls button svg { width: 16px; height: 16px; }
+#pd-viewer-controls button[data-action="pan"].active { background: #b91f10; }
+</style>
+  <script type="module" crossorigin src="./assets/index-C-f_g3RW.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/icons-BIt_wwpo.js">
+    <link rel="modulepreload" crossorigin href="./assets/react-JR2CCLUD.js">
+    <link rel="modulepreload" crossorigin href="./assets/three-BAVoTDyH.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BkhAo8TK.css">
+  <style>
+  .contact-mini-card, .contact-zoom-card { display: none !important; }
+  /* 所有 lucide 图标单红色；在红底/激活/深色背景按钮上反白 */
+  svg.lucide, svg[class*="icon"] { color: #E5301E !important; }
+  .is-active svg.lucide, .is-active svg[class*="icon"],
+  .primary-button svg.lucide, .primary-button svg[class*="icon"],
+  .project-save-button svg.lucide, .project-save-button svg[class*="icon"],
+  .is-saved svg.lucide, .is-saved svg[class*="icon"],
+  .panel-title svg.lucide, .panel-title svg[class*="icon"] {
+    color: #ffffff !important;
+  }
+  /* 预览画布：默认旋转模式光标为 default；平移模式由 JS 切换为 grab/grabbing */
+  .mockup-canvas canvas { cursor: default; }
+  .mockup-canvas canvas.pan-active { cursor: grab; }
+  .mockup-canvas canvas.pan-active:active { cursor: grabbing; }
+  /* 统一小图标按钮为圆角正方形 */
+  .icon-button,
+  .project-history__toggle,
+  .mini-control__row .icon-button,
+  .sidebar .icon-button,
+  .sidebar .project-history__toggle {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .icon-button svg,
+  .project-history__toggle svg,
+  .mini-control__row .icon-button svg,
+  .sidebar .icon-button svg,
+  .sidebar .project-history__toggle svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  /* 左上角应用图标固定为 44×44 */
+  .brand-mark {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .brand-mark img {
+    transform: scale(1) !important;
+  }
+  .brand-subtitle {
+    font-size: 10px !important;
+  }
+  </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
