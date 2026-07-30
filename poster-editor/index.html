@@ -647,6 +647,68 @@
     }, true);
   }
 
+  // ===================== 多语言翻译引导浮窗（安全 DOM 注入，不碰 React 内部状态）=====================
+  var translationAidsInjected = false;
+  function openTranslateHelp() {
+    var existing = document.getElementById('poster-translate-help-modal');
+    if (existing) { existing.style.display = 'flex'; return; }
+    var overlay = document.createElement('div');
+    overlay.id = 'poster-translate-help-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.55);';
+    overlay.innerHTML = [
+      '<div style="width:min(580px,92vw);max-height:86vh;overflow:auto;background:#fff;color:#1f2937;border-radius:14px;padding:20px 22px;font-size:13px;line-height:1.6;box-shadow:0 20px 60px rgba(0,0,0,.3);">',
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">',
+          '<strong style="font-size:15px;">多语言翻译 · 使用引导</strong>',
+          '<button id="pth-close" style="border:none;background:#f1f5f9;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;line-height:1;">×</button>',
+        '</div>',
+        '<p style="margin:6px 0;color:#475569;"><b>① 表格导入（一键翻译）</b></p>',
+        '<ul style="margin:4px 0 8px;padding-left:18px;color:#334155;">',
+          '<li>本站点为静态部署，「飞书 URL 同步」需本地 npm run dev，<b>请使用「CSV 导入」</b>。</li>',
+          '<li>列格式：<b>A=tid（锚点）｜C=英文母版｜D–R=15 个目标语言</b>。</li>',
+          '<li>飞书表导出 CSV → 多语言中心「导入」Tab → 点「使用 CSV 导入」→ 粘贴/上传 → 解析并导入。</li>',
+        '</ul>',
+        '<a href="./translation-template.csv" download style="display:inline-block;margin:2px 0 12px;padding:6px 12px;border-radius:8px;background:#8b5cf6;color:#fff;text-decoration:none;font-size:12px;">下载 CSV 模板</a>',
+        '<p style="margin:6px 0;color:#475569;"><b>② AI 翻译（国内兼容端点）</b></p>',
+        '<p style="margin:2px 0 6px;color:#334155;">在「AI 翻译」Tab 填 端点+模型+Key（密钥仅存你本地浏览器，不会上传）。点击下方复制端点：</p>',
+        '<div id="pth-presets" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">',
+          '<div data-ep="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" data-mdl="qwen-plus"><span style="font-weight:600;">通义千问</span> · qwen-plus</div>',
+          '<div data-ep="https://open.bigmodel.cn/api/paas/v4/" data-mdl="glm-4-flash"><span style="font-weight:600;">智谱 GLM</span> · glm-4-flash</div>',
+          '<div data-ep="https://api.deepseek.com/v1/chat/completions" data-mdl="deepseek-chat"><span style="font-weight:600;">DeepSeek</span> · deepseek-chat</div>',
+          '<div data-ep="https://api.openai.com/v1/chat/completions" data-mdl="gpt-4o-mini"><span style="font-weight:600;">OpenAI</span> · gpt-4o-mini</div>',
+        '</div>',
+        '<p style="margin:4px 0;color:#334155;">填好后，在目标语言 Tab 点「翻译此语言」即可逐语言翻译；依次切换 15 个语言即完成全译。</p>',
+        '<p style="margin:8px 0 0;color:#94a3b8;font-size:12px;">提示：密钥不应写入代码或提交仓库；请在你自己的浏览器里填写一次即可长期使用。</p>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.style.display = 'none'; });
+    var closeBtn = document.getElementById('pth-close');
+    if (closeBtn) closeBtn.addEventListener('click', function () { overlay.style.display = 'none'; });
+    var presets = overlay.querySelectorAll('#pth-presets > div');
+    Array.prototype.forEach.call(presets, function (p) {
+      p.style.cssText = 'padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:12px;';
+      p.addEventListener('click', function () {
+        var ep = p.getAttribute('data-ep');
+        if (navigator.clipboard) { try { navigator.clipboard.writeText(ep); } catch (e) {} }
+        p.style.background = '#dcfce7';
+        setTimeout(function () { p.style.background = ''; }, 800);
+      });
+    });
+  }
+  function injectTranslationAids() {
+    if (translationAidsInjected) return;
+    if (!document.body) return;
+    var btn = document.createElement('button');
+    btn.id = 'poster-translate-help-btn';
+    btn.type = 'button';
+    btn.title = '多语言翻译使用引导';
+    btn.textContent = '翻译帮助';
+    btn.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:99999;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:9999px;border:1px solid rgba(139,92,246,.5);background:rgba(139,92,246,.14);color:#7c3aed;font-size:13px;cursor:pointer;';
+    btn.addEventListener('click', function () { openTranslateHelp(); });
+    document.body.appendChild(btn);
+    translationAidsInjected = true;
+  }
+
   // ===================== 持续守护（防 React 重渲染清除注入按钮）=====================
   var headerObserver = null;
   var headerObserveTimer = null;
@@ -672,6 +734,7 @@
 
   // ===================== 等待应用挂载后注入 =====================
   function tryInject() {
+    injectTranslationAids();
     var homeExists = !!document.getElementById('poster-home-btn');
     var draftExists = !!(draftBtn && document.contains(draftBtn));
     if (homeExists && draftExists) {
